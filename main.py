@@ -1,4 +1,12 @@
 import cpm.cpm as cpm
+from kivy.app import App
+import gui.graph as graph
+
+class CPMapp(App):
+    def build(self):
+        return graph.GraphWidget()
+
+CPMapp().run()
 
 """ Create CPM sth. """
 brrr_system = cpm.CPM()
@@ -8,7 +16,7 @@ brrr_system = cpm.CPM()
 brrr_system.load_data_from_user()
 
 """ Solve network. """
-# Brrrr
+# Brrrrr
 brrr_system.solve()
 
 # Output
