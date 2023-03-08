@@ -13,7 +13,7 @@ brrr_system = cpm.CPM()
 
 """ Load data from user (to load data from file, see cpm/test/data_loader.py). """
 # Input
-brrr_system.load_data_from_user()
+brrr_system.load_data_from_user ()
 
 """ Solve network. """
 # Brrrrr
