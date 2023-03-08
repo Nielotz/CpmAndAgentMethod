@@ -1,0 +1,22 @@
+# Simple test
+# 1 - 2 - 3 - 4 - 5
+
+STHUNIQUE DATA
+#Czynność;Czynność bezpośrednio poprzedzająca;Czas trwania
+1-2;                       ;                       1
+2-3;                    1-2;                       2
+3-4;                    2-3;                       3
+4-5;                    3-4;                       4
+5-6;                    4-5;                       5
+
+STHUNIQUE RESULTS
+#Critical path
+1-2;2-3;3-4;4-5;5-6
+
+#Czynność;Czas trwania;ES;EF;LS;LF;Rezerwa;Czynność krytyczna
+1-2;           1;       0; 1; 0; 1;   0   ;        YES
+2-3;           2;       1; 3; 1; 3;   0   ;        YES
+3-4;           3;       3; 6; 3; 6;   0   ;        YES
+4-5;           4;       6;10; 6;10;   0   ;        YES
+5-6;           5;      10;15;10;15;   0   ;        YES
+
