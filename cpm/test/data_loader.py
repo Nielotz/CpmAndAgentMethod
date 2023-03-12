@@ -6,7 +6,7 @@ def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = 
     """
     Load test data from file.
 
-    :return test network, result network
+    :return test network, expected network
     """
     test_network: Network = Network()
     expected_network: Network = Network()
@@ -16,11 +16,20 @@ def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = 
     # for data
     for header, data in read_data.items():
         if header == "STHUNIQUE DATA":
-            test_network.nodes = [Node(id_, prev_ids.split(","), float(duration)) for id_, prev_ids, duration in data]
+            for id_, prev_ids, duration in data:
+                test_network.add_node(Node(id_, prev_ids.split(",") if prev_ids else [], float(duration)))
         elif header == "STHUNIQUE RESULTS":
             expected_network.critical_paths = data[0]
-            expected_network.nodes = [
-                Node(id_, prev_ids.split(","), duration, early_start, early_final, late_start, late_final, delay)
-                for id_, prev_ids, duration, early_start, early_final, late_start, late_final, delay in data[1:]]
+            expected_network.nodes = []
+            # Czynność;ES;                 EF;         LS;         LF;Rezerwa
+            for id_, early_start, early_final, late_start, late_final, delay in data[1:]:
+                node = Node(id_, [], 0)
+                node.early_start = float(early_start)
+                node.early_final = float(early_final)
+                node.late_start = float(late_start)
+                node.late_final = float(late_final)
+                node.possible_delay = float(delay)
+
+                expected_network.add_node(node)
 
     return test_network, expected_network
