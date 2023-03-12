@@ -16,11 +16,13 @@ class CPSapp(App):
         result_network: Network
         test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/simple_test.txt")
 
+        test_network.solve()
+
         # output_table = OutputTable(headers=("ID", "Poprzednik", "Czas trwania", "ES", "EF", "LS", "LF", "Opóżnienie"))
-        output_table = OutputTable(headers=result_network.nodes[0].asdict().keys())
-        for node in result_network.nodes:
+        output_table = OutputTable(headers=test_network.nodes[0].asdict().keys())
+        for node in test_network.nodes:
             values = node.asdict().values()
-            values = tuple(map(lambda val: ", ".join(val) if isinstance(val, (list, tuple)) else val, values))
+            values = tuple(map(lambda val: ", ".join(val) if isinstance(val, (list, tuple)) else str(val), values))
             output_table.add_values(values)
 
         return output_table
