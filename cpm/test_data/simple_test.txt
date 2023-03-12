@@ -1,13 +1,15 @@
 # Simple test
-# 1 - 2 - 3 - 4 - 5
+# 1 - 2 - 3 - 4 - 6 
+#           - 5 -
 
 STHUNIQUE DATA
 #Czynność;Czynność bezpośrednio poprzedzająca;Czas trwania
 1-2;                       ;                       1
 2-3;                    1-2;                       2
 3-4;                    2-3;                       3
-4-5;                    3-4;                       4
-5-6;                    4-5;                       5
+3-5;                    2-3;                       4
+5-6;                    3-5;                       5
+4-6;                    3-4;                       5
 
 STHUNIQUE RESULTS
 #Critical path

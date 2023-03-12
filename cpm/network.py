@@ -10,7 +10,7 @@ class Node:
 
         """ Used to specify task to solve. """
         self.id_: str = id_  # Czynność
-        self.prev_nodes: [Self, ] = copy.deepcopy(prev_nodes)
+        self.prev_nodes: list[Self, ] = copy.deepcopy(prev_nodes)
         self.duration: float = duration
 
         """ Calculated using Network.solve """
