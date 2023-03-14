@@ -1,8 +1,8 @@
 import data_input
 from cpm.network import Network, Node
 
-
-def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = ";") -> [Network, Network]:
+def load_data_from_file(path: str = "cpm/test_data/exercise_2_test.txt", sep: str = ";") -> [Network, Network]:
+# def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = ";") -> [Network, Network]:
     """
     Load test data from file.
 

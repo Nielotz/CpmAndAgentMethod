@@ -3,6 +3,7 @@ from kivy.app import App
 import gui.graph as graph
 import cpm.network as network
 import cpm.test.data_loader as dl
+from kivy.core.window import Window
 
 class CPMapp(App):
     def build(self):
@@ -13,6 +14,7 @@ class CPMapp(App):
         gra.draw_graph(net[0])
         return gra
 
+Window.clearcolor = (218/255, 222/255, 206/255, 1.0)
 CPMapp().run()
 
 """ Create CPM sth. """
