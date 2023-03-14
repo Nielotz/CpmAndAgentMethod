@@ -1,0 +1,32 @@
+To Do BOiL [Python]:
+B - Bartłomiej Gojowczyk
+M - Mateusz Dobrzański
+K - Kacper Dąbrowski
+[K]> GUI
+[K]-> ekran początkowy
+[K]-> wprowadzanie danych
+--> czynność 
+--> czynność bezpośrednio poprzedzająca
+--> czas trwania
+
+[M]-> wyświetlanie danych
+[M]--> tabelka
+[B]--> graf
+---> czynność
+---> czas trwania
+---> ES, EF, LS, LF
+---> rezerwa
+---> czynność krytyczna
+---> ścieżka krytyczna
+
+[B]--> harmonogram ASAP
+[B]--> harmonogram ALAP
+
+[M]> Algorytm
+-> ES, EF
+-> LS, LF
+-> rezerwa
+-> czynność krytyczna
+-> ścieżka krytyczna
+
+Testy
