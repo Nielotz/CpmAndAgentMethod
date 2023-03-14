@@ -20,7 +20,6 @@ def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = 
                 test_network.add_node(Node(id_, prev_ids.split(",") if prev_ids else [], float(duration)))
         elif header == "STHUNIQUE RESULTS":
             expected_network.critical_paths = data[0]
-            expected_network.nodes = []
             # Czynność;ES;                 EF;         LS;         LF;Rezerwa
             for id_, early_start, early_final, late_start, late_final, delay in data[1:]:
                 node = Node(id_, [], 0)
