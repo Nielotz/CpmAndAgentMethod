@@ -1,5 +1,5 @@
 import copy
-from typing import Self, NamedTuple
+from typing import Self
 
 
 class Node:
@@ -20,10 +20,17 @@ class Node:
         self.late_final: float = late_final
         self.possible_delay: float = possible_delay
 
+    def asdict(self):
+        return {
+            "id_": self.id_, "prev_nodes": self.prev_nodes, "duration": self.duration,
+            "early_start": self.early_start, "early_final": self.early_final,
+            "late_start": self.late_start, "late_final": self.late_final,
+            "possible_delay": self.possible_delay
+        }
+
     def __repr__(self):
-        return f"id_: {self.id_}, prev_nodes: {self.prev_nodes}, duration: {self.duration}, " \
-               f"early_start: {self.early_start}, early_final: {self.early_final}, " \
-               f"late_start: {self.late_start}, late_final: {self.late_final}, possible_delay: {self.possible_delay}"
+        return str(self.asdict())
+
 
 class Network:
     """ Holds Nodes and calculates CPM method params. """
@@ -43,4 +50,4 @@ class Network:
     def __repr__(self):
         return f"Network:\n" \
                f"\t Critical path:" + "\t\t".join(self.critical_paths) \
-        + f"\n\tNodes: \n \t\t" + '\t\t'.join([str(node) for node in self.nodes])
+            + f"\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self.nodes])
