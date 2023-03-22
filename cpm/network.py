@@ -41,21 +41,8 @@ class Network:
     def add_node(self, node: Node):
         self.nodes_by_id[node.id_] = node
 
-    def solve(self) -> [Self, ]:
-        """
-        Calculate missing nodes' params and critical path.
-
-        Fix order.
-        Traverse right.
-        Fix orphan tasks.
-        Traverse left.
-
-        :return solved list of possible networks
-        """
-
-        """ Fix order. """
-        def sort(network: Network):
-            """ Sorts nodes chronologically.
+    def _sorted(self) -> Self:
+        """ Sorts nodes chronologically.
 
             Example:
                     |-H-I
@@ -70,60 +57,55 @@ class Network:
                 But never to:
                     D ABC...
                     A HI ...
-            """
-            # Example ids: [0, 1, 2, 3]
-            # Reverse order to allow to remove from list without changing others positions.
-            nodes_ids_to_parse: [Hashable, ] = list(nodes.keys())[::-1]  # Example ids: [3, 2, 1, 0]
-            parsed_nodes: {Node, } = dict()  # Output dict.
-            while nodes_ids_to_parse:  # Iterate until there are nodes in wrong order.
-                for node_id in nodes_ids_to_parse[::-1]:  # Return order to 0…N-1 to speed up in case of correct input.
-                    node: Node = nodes[node_id]
-                    if not node.prev_nodes:
-                        node.early_start = node.late_start = node.possible_delay = 0  # Start
-                    elif node.prev_nodes and None not in (
-                            prev_early_first := [nodes[prev_id].early_final for prev_id in node.prev_nodes]):
-                        node.early_start = max(prev_early_first)
-                    else:
+        """
+        nodes = self.nodes_by_id
+
+        to_parse: [Hashable, ] = list(nodes.keys())[::-1]
+        parsed: Network = Network()  # Output dict.
+        while to_parse:
+            # Reverse order to allow to remove from list without changing positions of others.
+            for node_id in to_parse[::-1]:
+                node: Node = nodes[node_id]
+
+                for prev_id in node.prev_nodes:
+                    if prev_id in to_parse:
                         continue
-                    node.early_final = node.early_start + node.duration
-                    nodes_ids_to_parse.remove(node_id)
-                    parsed_nodes[node.id_] = node
 
-            return parsed_nodes
+                to_parse.remove(node_id)
+                parsed.add_node(node)
 
+        return parsed
 
-        """ Fix order and traverse right. """
+    def fill_es_and_ef(self):
+        """
+        Traverse events forward - from start to end.
 
-        def sort_and_fill_es_and_ef(nodes: {Hashable: Node, }) -> {Hashable: Node, }:
-            """
-            Traverse events from start to end.
+        Fills early_start and early_final.
 
-            Sorts nodes chronologically.
-            Fills early_start and early_final.
+        Requires sorted nodes that no prev is on right of any node.
+        """
+        for node in self.nodes_by_id.values():
+            if not node.prev_nodes:  # Start
+                node.early_start = node.late_start = node.possible_delay = 0
+            else:
+                node.early_start = max([self.nodes_by_id[prev_id].early_final for prev_id in node.prev_nodes])
 
-            :return: dictionary of sorted nodes, mapped: {node.id_: Node}
-            """
-            # Example ids: [0, 1, 2, 3]
-            # Reverse order to allow to remove from list without changing others positions.
-            nodes_ids_to_parse: [Hashable, ] = list(nodes.keys())[::-1]  # Example ids: [3, 2, 1, 0]
-            parsed_nodes: {Node, } = dict()  # Output dict.
-            while nodes_ids_to_parse:  # Iterate until there are nodes in wrong order.
-                for node_id in nodes_ids_to_parse[::-1]:  # Return order to 0…N-1 to speed up in case of correct input.
-                    node: Node = nodes[node_id]
-                    if not node.prev_nodes:
-                        node.early_start = node.late_start = node.possible_delay = 0  # Start
-                    elif node.prev_nodes and None not in (
-                            prev_early_first := [nodes[prev_id].early_final for prev_id in node.prev_nodes]):
-                        node.early_start = max(prev_early_first)
-                    else:
-                        continue
-                    node.early_final = node.early_start + node.duration
-                    nodes_ids_to_parse.remove(node_id)
-                    parsed_nodes[node.id_] = node
+            node.early_final = node.early_start + node.duration
 
-            return parsed_nodes
+    def solve(self) -> [Self, ]:
+        """
+        Calculate missing nodes' params and critical path.
 
-        nodes: {Hashable: Node} = sort_and_fill_es_and_ef(dict(self.nodes_by_id))
+        Fix order.
+        Traverse right.
+        Fix orphan tasks.
+        Traverse left.
+
+        :return solved list of possible networks
+        """
+        self.nodes_by_id = self._sorted().nodes_by_id
+
+        self.fill_es_and_ef()
 
         """ Fix orphan tasks. """
 
@@ -145,7 +127,7 @@ class Network:
 
             _candidate_idx: int = 0
             while _candidate_idx < len(keys := tuple(orphans_candidates.keys())[::-1]):
-                pop_recursively_node_prevs_from_candidates(nodes[keys[_candidate_idx]])
+                pop_recursively_node_prevs_from_candidates(self.nodes_by_id[keys[_candidate_idx]])
                 _candidate_idx += 1
 
 
@@ -166,11 +148,11 @@ class Network:
 
             return possible_networks
 
-        networks: [Network, ] = fix_orphan_tasks(nodes)
+        networks: [Network, ] = fix_orphan_tasks(self.nodes_by_id)
         Logger.info(f"Possible networks: {len(networks)}")
 
-        for network in networks:
-            network.nodes_by_id = sort_and_fill_es_and_ef(network.nodes_by_id)
+        # for network in networks:
+        #     network.nodes_by_id = fill_es_and_ef(network.nodes_by_id)
 
         """ Traverse left. """
 
@@ -213,4 +195,4 @@ class Network:
     def __repr__(self):
         return f"Network:\n" \
                f"\t Critical path:" + "\t\t".join([str(cp) for cp in self.critical_paths]) \
-            + f"\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self.nodes])
+            + f"\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self.nodes_by_id.values()])
