@@ -15,13 +15,13 @@ class CPSapp(App):
         from cpm.network import Network
         result_network: Network
         test_network: Network
-        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/simple_test.txt")
+        test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/simple_test.txt")
         # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/test_mid_orphan.txt")
-        test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/test_two_critical_paths_that_ends_with_orphans.txt")
+        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/test_two_critical_paths_that_ends_with_orphans.txt")
 
 
         result_networks: [Network, ] = test_network.solve()
-        result_network = result_networks[1]
+        result_network = result_networks[0]
 
         # output_table = OutputTable(headers=("ID", "Poprzednik", "Czas trwania", "ES", "EF", "LS", "LF", "Opóżnienie"))
         output_table = OutputTable(headers=tuple(result_network.nodes_by_id.values())[0].asdict().keys())
