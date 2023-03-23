@@ -7,18 +7,18 @@ from cpm.network import Network, Node
 def test_simple():
     test_network: Network; expected_network: Network  # Type hinting for PyCharm
     test_network, expected_network = cpm.test.data_loader.load_data_from_file()
-    test_network.solve()
+    test_network = test_network.solve()[0]
 
     # assert test_network.critical_paths == expected_network.critical_paths
-    for test_node in test_network.nodes:
-        for expected_node in expected_network.nodes:
+    for test_node in test_network.nodes_by_id.values():
+        for expected_node in expected_network.nodes_by_id.values():
             if expected_node.id_ == test_node.id_:
                 # assert expected_node == test_node
                 break
         else:
             pytest.fail("Node not found")
 
-    for test_node in test_network.nodes:
+    for test_node in test_network.nodes_by_id.values():
         expected_node: Node = expected_network.nodes_by_id[test_node.id_]
         assert expected_node.early_start == test_node.early_start
         assert expected_node.early_final == test_node.early_final
