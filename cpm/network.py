@@ -2,6 +2,7 @@ import copy
 from typing import Hashable, Self
 from kivy.logger import Logger
 
+
 class Node:
     # noinspection PyTypeChecker
     def __init__(self, id_: str, prev_nodes: [Hashable, ], duration: float):
@@ -142,7 +143,7 @@ class Network:
             possible_networks: [Network, ] = []
             for final_orphan in final_orphans:
                 possible_networks.append(network := Network(nodes_by_id=copy.deepcopy(nodes_sorted_start_to_final)))
-                for orphan in final_orphans:
+                for orphan in candidate_final:
                     if orphan != final_orphan:
                         network.nodes_by_id[final_orphan].prev_nodes.append(orphan)
 
