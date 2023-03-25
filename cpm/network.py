@@ -4,33 +4,31 @@ from kivy.logger import Logger
 
 
 class Activity:
-    def __init__(self, id_: str, prev_activity: [Hashable, ], duration: float):
+    def __init__(self, id_: str, prev_activity_id: [Hashable, ], duration: float):
         self.id_: str = id_
-        self.prev_activity: [Hashable, ] = copy.deepcopy(prev_activity)
+        self.prev_activity: [Hashable, ] = copy.deepcopy(prev_activity_id)
         self.duration: float = duration
 
-        # noinspection PyTypeChecker
-        self.start_event: Event = None
-        # noinspection PyTypeChecker
-        self.finish_event: Event = None
-
 class Event:
-    early_start: float = None
-    early_final: float = None
-    late_start: float = None
-    late_final: float = None
-    possible_delay: float = None
+    def __init__(self, early_start: float = None, early_final: float = None,
+                 late_start: float = None, late_final: float = None,
+                 possible_delay: float = None):
+        self.early_start: float = early_start
+        self.early_final: float = early_final
+        self.late_start: float = late_start
+        self.late_final: float = late_final
+        self.possible_delay: float = possible_delay
 
 
 class Node:
-    def __init__(self, id_: str, prev_activity: [Hashable, ], duration: float):
+    def __init__(self, activity_id_: str, prev_activity_id: [Hashable, ], duration: float):
         """
         A node in a CPM network.
 
         Contains activity + activity end event.
         """
 
-        self.activity: Activity = Activity(id_=id_, prev_activity=prev_activity, duration=duration)
+        self.activity: Activity = Activity(id_=activity_id_, prev_activity_id=prev_activity_id, duration=duration)
         self.event: Event = Event()
 
     def asdict(self):
@@ -44,9 +42,51 @@ class Node:
     def __repr__(self):
         return str(self.asdict())
 
+class StartNode(Node):
+    """ No activity, zeroed event. """
+
+    # noinspection PyMissingConstructor
+    def __init__(self):
+        self.activity = None
+        self.event = Event(0, 0, 0, 0, 0)
+
 
 class Network:
     """ Holds Nodes and calculates CPM method params. """
+    class Graph:
+        class GraphNode:
+            def __init__(self, prev_graph_nodes: [Self, ] = None, next_graph_nodes: [Self, ] = None, node: Node = None):
+                self.prev_graph_nodes = prev_graph_nodes or []
+                self.next_graph_nodes = next_graph_nodes or []
+                self.node = node
+
+        def __init__(self, sorted_nodes: [Node]):
+            """
+            @param sorted_nodes: nodes to create graph from, provided chronologically - parent, child
+            """
+            # noinspection PyPep8Naming
+            GraphNode = Network.Graph.GraphNode
+            self.head: GraphNode = GraphNode(node=StartNode())
+            self.graph_node_by_activity_id: {Hashable: GraphNode} = {}
+
+            for node in sorted_nodes:
+                node: Node  # Fix PyCharm typing
+                # When start node.
+                if not node.activity.prev_activity:
+                    start_node: GraphNode = GraphNode(prev_graph_nodes=[self.head, ], node=node)
+
+                    self.head.next_graph_nodes.append(start_node)
+                    self.graph_node_by_activity_id[node.activity.id_] = start_node
+                else:
+                    # For each prev, set prev next and current prev.
+                    for prev_activity in node.activity.prev_activity:
+                        prev_graph_node: GraphNode = self.graph_node_by_activity_id[prev_activity]
+                        curr_graph_node: GraphNode = GraphNode(prev_graph_nodes=[prev_graph_node, ], node=node)
+
+                        prev_graph_node.next_graph_nodes.append(curr_graph_node)
+                        self.graph_node_by_activity_id[node.activity.id_] = curr_graph_node
+
+
 
     def __init__(self, nodes_by_activity_id: {Hashable, Node} = None):
         self.nodes_by_activity_id: {Hashable, Node} = nodes_by_activity_id or dict()
@@ -54,6 +94,11 @@ class Network:
 
     def add_node(self, node: Node):
         self.nodes_by_activity_id[node.activity.id_] = node
+
+    def build_graph(self):
+        sorted_network: Network = self._sorted()
+        graph = Network.Graph(tuple(sorted_network.nodes_by_activity_id.values()))
+        xd = 2
 
     def _sorted(self) -> Self:
         """ Sorts nodes chronologically.
@@ -117,6 +162,8 @@ class Network:
 
         :return solved list of possible networks
         """
+
+        self.build_graph()
         self.nodes_by_activity_id = self._sorted().nodes_by_activity_id
 
         self.fill_es_and_ef()
