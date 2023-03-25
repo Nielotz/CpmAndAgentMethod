@@ -223,7 +223,7 @@ class GraphWidget(EffectWidget):
         event_widgets = dict()
         action_widgets:dict(str, ActionWidget) = dict()
 
-        for node in network.nodes_by_id.values():
+        for node in network.nodes_by_activity_id.values():
             ids = node.id_.split("-")
             if ids[1] in prev_event_widgets_number:
                 prev_event_widgets_number[ids[1]] += 1
@@ -235,7 +235,7 @@ class GraphWidget(EffectWidget):
                 next_event_widgets_number[ids[0]] = 1
 
 
-        for node in network.nodes_by_id.values():
+        for node in network.nodes_by_activity_id.values():
             ids = node.id_.split("-")
             if not ids[0] in event_widgets:
                 event_widgets[ids[0]] = EventWidget(pos=(150 * int(ids[0]) - 150, 300), 
@@ -257,7 +257,7 @@ class GraphWidget(EffectWidget):
             self.add_widget(event_widgets[key])
 
 
-        for node in network.nodes_by_id.values():
+        for node in network.nodes_by_activity_id.values():
             ids = node.id_.split("-")
             action_widgets[node.id_] = ActionWidget() 
             action_widgets[node.id_].set_event_widget_0(event_widgets[ids[0]])
