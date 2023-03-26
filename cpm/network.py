@@ -1,7 +1,7 @@
 import copy
 from typing import Hashable, Self
+
 from kivy.logger import Logger
-import copy
 
 
 class Activity:
@@ -9,6 +9,7 @@ class Activity:
         self.id_: str = id_
         self.prev_activity: [Hashable, ] = copy.deepcopy(prev_activity_id)
         self.duration: float = duration
+
 
 class Event:
     def __init__(self, early_start: float = None, early_final: float = None,
@@ -43,6 +44,7 @@ class Node:
     def __repr__(self):
         return str(self.asdict())
 
+
 class StartNode(Node):
     """ No activity, zeroed event. """
 
@@ -50,6 +52,17 @@ class StartNode(Node):
     def __init__(self):
         self.activity = Activity("START", [], 0)
         self.event = Event(0, 0, 0, 0, 0)
+
+
+class FinalNode(Node):
+    """ No activity. """
+
+    # noinspection PyMissingConstructor
+    def __init__(self, last_event: Event):
+        self.activity = Activity("FINISH", [], 0)
+        self.event = copy.deepcopy(last_event)
+        self.event.early_start = self.event.late_start = self.event.late_final = self.event.early_final
+        self.event.possible_delay = 0
 
 
 class Network:
@@ -61,6 +74,34 @@ class Network:
                 self.prev_graph_nodes: [Self, ] = prev_graph_nodes or []
                 self.next_graph_nodes: [Self, ] = next_graph_nodes or []
                 self.node = node
+
+            def __repr__(self):
+                return f"prev: {[prev.node.activity.id_ for prev in self.prev_graph_nodes]}, " \
+                       f"next: {[next.node.activity.id_ for next in self.next_graph_nodes]}, node: {self.node}"
+
+        def print(self):
+            def get_id(node: Network.Graph.GraphNode):
+                return node.node.activity.id_
+
+            def summarize_node(node: Network.Graph.GraphNode):
+                return f"Prev: {[get_id(n) for n in node.prev_graph_nodes]}, " \
+                       f"Next: {[get_id(n) for n in node.next_graph_nodes]}, " \
+                       f"ID: {get_id(node)}, " \
+                       f"ES: {node.node.event.early_start}, " \
+                       f"EF: {node.node.event.early_final}, " \
+                       f"LS: {node.node.event.late_start}, " \
+                       f"LF: {node.node.event.late_final}, " \
+                       f"Delay: {node.node.event.possible_delay}"
+
+            def print_children_req(node: Network.Graph.GraphNode, prefix_size: int):
+                prefix = '\t' * prefix_size
+                print(f"{prefix}{summarize_node(node)}")
+                for next_ in node.next_graph_nodes:
+                    print_children_req(next_, prefix_size=prefix_size + 1)
+
+            print(f"{summarize_node(self.head)}")
+            for child in self.head.next_graph_nodes:
+                print_children_req(child, prefix_size=1)
 
         def __init__(self, sorted_network: "Network"):
             """
@@ -131,6 +172,7 @@ class Network:
                 parsed.add_node(node)
 
         return parsed
+
     def build_graph(self):
         return Network.Graph(self._sorted())
 
@@ -140,6 +182,7 @@ class Network:
 
         Fills early_start and early_final.
         """
+
         def fill_es_and_ef_req(start_node: Network.Graph.GraphNode):
             node: Node = start_node.node
 
@@ -162,16 +205,19 @@ class Network:
         for graph_node in head.next_graph_nodes:
             fill_es_and_ef_req(graph_node)
 
-    def fix_orphan_nodes(self, graph: Graph) -> [Graph]:
+    def merge_orphan_nodes(self, graph: Graph) -> [Graph]:
         """
         Fix orphan tasks.
 
         When there are multiple critical paths, there may be multiple possible graphs.
+
+        Adds final dummy node at the end.
         """
         # noinspection PyPep8Naming
         GraphNode = Network.Graph.GraphNode
 
         orphans: [GraphNode] = []
+
         def find_orphan_nodes_req(graph_node: GraphNode):
             if not graph_node.next_graph_nodes:
                 orphans.append(graph_node)
@@ -183,22 +229,33 @@ class Network:
 
         early_finals = [(node.node.event.early_final, node) for node in orphans]
         final_time = max(early_finals)[0]
-        final_nodes: [GraphNode] = [node for early_final, node in early_finals if early_final == final_time]
+        last_nodes: [GraphNode] = [node for early_final, node in early_finals if early_final == final_time]
 
         possible_graphs: [Network.Graph] = []
 
-        for final_node in final_nodes:
+        for last_node in last_nodes:
+            last_node: GraphNode
             graph_: Network.Graph = copy.deepcopy(graph)
             possible_graphs.append(graph_)
 
-            final_node_: GraphNode = graph_.graph_node_by_activity_id[final_node.node.activity.id_]
-            graph_.tail = final_node_
+            last_node_: GraphNode = graph_.graph_node_by_activity_id[last_node.node.activity.id_]
+
+            # Dummy node past tree.
+            finish_node_: GraphNode = GraphNode(node=FinalNode(last_node_.node.event), prev_graph_nodes=[last_node_])
+            graph_.tail = finish_node_
+
+            last_node_.next_graph_nodes.append(finish_node_)
+
             for orphan in orphans:
-                if orphan != final_node:
+                if orphan is not last_node:
                     orphan_: GraphNode = graph_.graph_node_by_activity_id[orphan.node.activity.id_]
 
-                    final_node_.prev_graph_nodes.append(orphan_)
-                    orphan_.next_graph_nodes.append(final_node_)
+                    # final_node_.prev_graph_nodes.append(orphan_)
+                    # orphan_.next_graph_nodes.append(final_node_)
+
+                    orphan_.node.event = last_node_.node.event
+                    finish_node_.prev_graph_nodes.append(orphan_)
+                    orphan_.next_graph_nodes.append(finish_node_)
 
         return possible_graphs
 
@@ -208,6 +265,7 @@ class Network:
 
         Fills late_start, late_final and possible_delay.
         """
+
         def fill_ls_lf_and_delay_req(start_node: Network.Graph.GraphNode):
             node: Node = start_node.node
 
@@ -226,14 +284,12 @@ class Network:
 
         # Fill final node values.
         last_event = tail.node.event
-        last_event.late_start = last_event.early_start
-        last_event.late_final = last_event.early_final
+        last_event.late_start = last_event.early_start = last_event.late_final = last_event.early_final
         last_event.possible_delay = 0
 
         # Fill all other nodes.
         for prev_node in tail.prev_graph_nodes:
             fill_ls_lf_and_delay_req(prev_node)
-
 
     def solve(self) -> [Self, ]:
         """
@@ -254,7 +310,7 @@ class Network:
         self.fill_es_and_ef(graph.head)
 
         """ Fix orphan tasks. """
-        graphs: [Network.Graph, ] = self.fix_orphan_nodes(graph=graph)
+        graphs: [Network.Graph, ] = self.merge_orphan_nodes(graph=graph)
         Logger.info(f"Possible graphs: {len(graphs)}")
 
         graph = graphs[0]
