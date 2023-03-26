@@ -16,8 +16,8 @@ class CPSapp(App):
         result_network: Network
         test_network: Network
         test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/121 - quick side task.txt")
-        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/straight_path.txt")
-        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/test_mid_orphan.txt")
+        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/111111 - straight path.txt")
+        # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/112 - two orphans.txt")
         # test_network, result_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/test_two_critical_paths_that_ends_with_orphans.txt")
 
 
