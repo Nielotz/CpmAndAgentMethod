@@ -45,22 +45,29 @@ class Node:
         return str(self.asdict())
 
 
-class StartNode(Node):
+class ApparentNode(Node):
+    """ No activity, zeroed event. """
+
+    # noinspection PyMissingConstructor
+    def __init__(self, activity_name="apparent", event: Event = None):
+        self.activity = Activity(activity_name, [], 0)
+        self.event = event or Event(0, 0, 0, 0, 0)
+
+
+class StartNode(ApparentNode):
     """ No activity, zeroed event. """
 
     # noinspection PyMissingConstructor
     def __init__(self):
-        self.activity = Activity("START", [], 0)
-        self.event = Event(0, 0, 0, 0, 0)
+        super().__init__(activity_name="START")
 
 
-class FinalNode(Node):
+class FinalNode(ApparentNode):
     """ No activity. """
 
     # noinspection PyMissingConstructor
     def __init__(self, last_event: Event):
-        self.activity = Activity("FINISH", [], 0)
-        self.event = copy.deepcopy(last_event)
+        super().__init__(activity_name="FINISH", event=copy.deepcopy(last_event))
         self.event.early_start = self.event.late_start = self.event.late_final = self.event.early_final
         self.event.possible_delay = 0
 
@@ -76,17 +83,21 @@ class Network:
                 self.node = node
 
             def __repr__(self):
-                return f"prev: {[prev.node.activity.id_ for prev in self.prev_graph_nodes]}, " \
-                       f"next: {[next.node.activity.id_ for next in self.next_graph_nodes]}, node: {self.node}"
+                return f"prev: {[prev.id_ for prev in self.prev_graph_nodes]}, " \
+                       f"next: {[next.id_ for next in self.next_graph_nodes]}, node: {self.node}"
+
+            @property
+            def id_(self):
+                return self.node.activity.id_
 
         def print(self):
             def get_id(node: Network.Graph.GraphNode):
                 return node.node.activity.id_
 
             def summarize_node(node: Network.Graph.GraphNode):
-                return f"Prev: {[get_id(n) for n in node.prev_graph_nodes]}, " \
-                       f"Next: {[get_id(n) for n in node.next_graph_nodes]}, " \
-                       f"ID: {get_id(node)}, " \
+                return f"Prev: {[n.id_ for n in node.prev_graph_nodes]}, " \
+                       f"Next: {[n.id_ for n in node.next_graph_nodes]}, " \
+                       f"ID: {node.id_}, " \
                        f"ES: {node.node.event.early_start}, " \
                        f"EF: {node.node.event.early_final}, " \
                        f"LS: {node.node.event.late_start}, " \
@@ -205,7 +216,7 @@ class Network:
         for graph_node in head.next_graph_nodes:
             fill_es_and_ef_req(graph_node)
 
-    def merge_orphan_nodes(self, graph: Graph) -> [Graph]:
+    def add_apparent_activity_between_orphan_nodes(self, graph: Graph) -> [Graph]:
         """
         Fix orphan tasks.
 
@@ -227,35 +238,40 @@ class Network:
 
         find_orphan_nodes_req(graph.head)
 
-        early_finals = [(node.node.event.early_final, node) for node in orphans]
+        early_finals = [(graph_node.node.event.early_final, graph_node) for graph_node in orphans]
         final_time = max(early_finals)[0]
-        last_nodes: [GraphNode] = [node for early_final, node in early_finals if early_final == final_time]
+        last_nodes: [GraphNode] = [graph_node for early_final, graph_node in early_finals if early_final == final_time]
 
         possible_graphs: [Network.Graph] = []
 
         for last_node in last_nodes:
             last_node: GraphNode
+
             graph_: Network.Graph = copy.deepcopy(graph)
             possible_graphs.append(graph_)
 
-            last_node_: GraphNode = graph_.graph_node_by_activity_id[last_node.node.activity.id_]
+            last_node_: GraphNode = graph_.graph_node_by_activity_id[last_node.id_]
 
             # Dummy node past tree.
             finish_node_: GraphNode = GraphNode(node=FinalNode(last_node_.node.event), prev_graph_nodes=[last_node_])
-            graph_.tail = finish_node_
-
             last_node_.next_graph_nodes.append(finish_node_)
 
-            for orphan in orphans:
-                if orphan is not last_node:
-                    orphan_: GraphNode = graph_.graph_node_by_activity_id[orphan.node.activity.id_]
+            graph_.tail = finish_node_
 
-                    # final_node_.prev_graph_nodes.append(orphan_)
-                    # orphan_.next_graph_nodes.append(final_node_)
+            orphans_: [GraphNode, ] = orphans[:]
+            orphans_.remove(last_node)
+            for orphan in orphans_:
+                # Add apparent task that connects orphans to the last_node.
+                orphan_: GraphNode = graph_.graph_node_by_activity_id[orphan.id_]
 
-                    orphan_.node.event = last_node_.node.event
-                    finish_node_.prev_graph_nodes.append(orphan_)
-                    orphan_.next_graph_nodes.append(finish_node_)
+                # Connect orphan to last_node.
+                apparent_graph_node: GraphNode = GraphNode(next_graph_nodes=[last_node_],
+                                                           prev_graph_nodes=[orphan_],
+                                                           node=ApparentNode(
+                                                               activity_name=f"apparent_{orphan_.id_}->{last_node_.id_}",
+                                                               event=last_node_.node.event))
+                last_node_.prev_graph_nodes.append(apparent_graph_node)
+                orphan_.next_graph_nodes.append(apparent_graph_node)
 
         return possible_graphs
 
@@ -265,19 +281,23 @@ class Network:
 
         Fills late_start, late_final and possible_delay.
         """
-
         def fill_ls_lf_and_delay_req(start_node: Network.Graph.GraphNode):
-            node: Node = start_node.node
+            # Welp, something needs to be done here.
+            if "apparent" not in start_node.id_:
+                node: Node = start_node.node
 
-            next_late_starts = [next_node.node.event.late_start for next_node in start_node.next_graph_nodes]
+                if len(start_node.next_graph_nodes) == 1 and "apparent" in start_node.next_graph_nodes[0].id_:
+                    next_late_starts = [next_node.node.event.late_final for next_node in start_node.next_graph_nodes]
+                else:
+                    next_late_starts = [next_node.node.event.late_start for next_node in start_node.next_graph_nodes]
 
-            # Other branch needs to be filled first.
-            if None in next_late_starts:
-                return
+                # Other branch needs to be filled first.
+                if None in next_late_starts:
+                    return
 
-            node.event.late_final = min(next_late_starts)
-            node.event.late_start = node.event.late_final - node.activity.duration
-            node.event.possible_delay = node.event.late_start - node.event.early_start
+                node.event.late_final = min(next_late_starts)
+                node.event.late_start = node.event.late_final - node.activity.duration
+                node.event.possible_delay = node.event.late_start - node.event.early_start
 
             for prev_node in start_node.prev_graph_nodes:
                 fill_ls_lf_and_delay_req(prev_node)
@@ -310,7 +330,7 @@ class Network:
         self.fill_es_and_ef(graph.head)
 
         """ Fix orphan tasks. """
-        graphs: [Network.Graph, ] = self.merge_orphan_nodes(graph=graph)
+        graphs: [Network.Graph, ] = self.add_apparent_activity_between_orphan_nodes(graph=graph)
         Logger.info(f"Possible graphs: {len(graphs)}")
 
         graph = graphs[0]
@@ -327,7 +347,7 @@ class Network:
         # self.critical_paths = [[id1, id2...]]
 
         self.nodes_by_activity_id = graph.graph_node_by_activity_id
-        return graph
+        return graphs
 
     def __repr__(self):
         return f"Network:\n" \
