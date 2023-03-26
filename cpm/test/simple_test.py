@@ -6,7 +6,7 @@ from cpm.network import Network, Node
 
 def runner(path: str):
     test_network: Network; expected_network: Network  # Type hinting for PyCharm
-    test_network, expected_network = cpm.test.data_loader.load_data_from_file("cpm/test_data/111111 - straight path.txt")
+    test_network, expected_network = cpm.test.data_loader.load_data_from_file(path)
     result_graph: Network.Graph = test_network.solve()[0]
 
     result_nodes = [graph_node.node for graph_node in result_graph.graph_node_by_activity_id.values()]
@@ -37,3 +37,9 @@ def test_121_shorter_task():
 
 def test_112_two_orphans():
     runner("cpm/test_data/112 - two orphans.txt")
+
+def test_exercise_2():
+    runner("cpm/test_data/exercise_2_test.txt")
+
+# def test_two_critical_paths_that_ends_with_orphans():
+#     runner("cpm/test_data/test_two_critical_paths_that_ends_with_orphans.txt")
