@@ -7,13 +7,14 @@ from kivy.core.window import Window
 
 class CPMapp(App):
     def build(self):
-        net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\test_two_critical_paths_that_ends_with_orphans.txt")
+        net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\test_mid_orphan.txt")
         nn = net[0].solve()
 
-        gra = graph.GraphWidget()
+        # gra = graph.GraphWidget()
         # gra.set_network(net[0])
-        gra.draw_graph(nn[0])
-        return gra
+        # gra.draw_graph(nn[0])
+        graph_meneger = graph.GraphMeneger(net = nn[0], size=(5000,5000), size_hint=(None, None))
+        return graph_meneger
 
 Window.clearcolor = (218/255, 222/255, 206/255, 1.0)
 CPMapp().run()
