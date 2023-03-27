@@ -1,0 +1,22 @@
+#         [CP]
+#       A      C
+#  [CP]          [CP]
+#       B      D
+#          []
+
+STHUNIQUE DATA
+#Czynność;Czynność bezpośrednio poprzedzająca;Czas trwania
+A;                     ;                       5
+B;                     ;                       3
+C;                    A;                       5
+D;                    B;                       5
+
+STHUNIQUE RESULTS
+#Critical path
+A;C
+
+#Czynność; ES; EF; LS; LF; Rezerwa
+A;          0;  5;  0;  5;    0
+B;          0;  3;  2;  5;    2
+C;          5; 10;  5; 10;    0
+D;          3;  8;  5; 10;    2

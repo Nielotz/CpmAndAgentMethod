@@ -1,7 +1,7 @@
 import data_input
 from cpm.network import Network, Node
 
-def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = ";") -> [Network, Network]:
+def load_data_from_file(path: str = "cpm/test_data/111111 - straight path.txt", sep: str = ";") -> [Network, Network]:
     """
     Load test data from file.
 
@@ -22,11 +22,11 @@ def load_data_from_file(path: str = "cpm/test_data/simple_test.txt", sep: str = 
             # Czynność;ES;                 EF;         LS;         LF;Rezerwa
             for id_, early_start, early_final, late_start, late_final, delay in data[1:]:
                 node = Node(id_, [], 0)
-                node.early_start = float(early_start)
-                node.early_final = float(early_final)
-                node.late_start = float(late_start)
-                node.late_final = float(late_final)
-                node.possible_delay = float(delay)
+                node.event.early_start = float(early_start)
+                node.event.early_final = float(early_final)
+                node.event.late_start = float(late_start)
+                node.event.late_final = float(late_final)
+                node.event.possible_delay = float(delay)
 
                 expected_network.add_node(node)
 
