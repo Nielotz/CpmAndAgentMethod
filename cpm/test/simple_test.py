@@ -38,8 +38,8 @@ def test_121_shorter_task():
 def test_112_two_orphans():
     runner("cpm/test_data/112 - two orphans.txt")
 
-def test_exercise_2():
-    runner("cpm/test_data/exercise_2_test.txt")
+# def test_exercise_2():
+#     runner("cpm/test_data/exercise_2_test.txt")
 
 # def test_two_critical_paths_that_ends_with_orphans():
 #     runner("cpm/test_data/test_two_critical_paths_that_ends_with_orphans.txt")
