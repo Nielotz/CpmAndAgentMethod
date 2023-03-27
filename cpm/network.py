@@ -1,5 +1,5 @@
 import copy
-from typing import Hashable, Self
+from typing import Hashable, Self, Callable
 
 from kivy.logger import Logger
 
@@ -72,6 +72,7 @@ class FinalNode(ApparentNode):
         self.event.possible_delay = 0
 
 
+# TODO: Merge Network and Graph."
 class Network:
     """ Holds Nodes and calculates CPM method params. """
 
@@ -80,7 +81,7 @@ class Network:
             def __init__(self, prev_graph_nodes: [Self, ] = None, next_graph_nodes: [Self, ] = None, node: Node = None):
                 self.prev_graph_nodes: [Self, ] = prev_graph_nodes or []
                 self.next_graph_nodes: [Self, ] = next_graph_nodes or []
-                self.node = node
+                self.node: Node = node
 
             def __repr__(self):
                 return f"prev: {[prev.id_ for prev in self.prev_graph_nodes]}, " \
@@ -124,6 +125,7 @@ class Network:
             # noinspection PyTypeChecker
             self.tail: GraphNode = None
             self.graph_node_by_activity_id: {Hashable: GraphNode} = {}
+            self.critical_paths: [Hashable] = []
 
             for node_id, node in sorted_network.nodes_by_activity_id.items():
                 node: Node  # Fix PyCharm typing
@@ -142,9 +144,26 @@ class Network:
                         prev_graph_node.next_graph_nodes.append(curr_graph_node)
                         self.graph_node_by_activity_id[node_id] = curr_graph_node
 
+        def calculate_critical_paths(self):
+            """ Calculate critical path and set self.critical_paths. """
+
+            # noinspection PyPep8Naming
+            GraphNode = Network.Graph.GraphNode
+
+            is_critical: Callable[[GraphNode], bool] = lambda graph_node: not graph_node.node.event.possible_delay
+
+            def find_req(node: GraphNode, critical_path_: []):
+                for graph_node in node.next_graph_nodes:
+                    if graph_node.id_ == "FINISH":
+                        self.critical_paths.append(critical_path_)
+                    elif is_critical(graph_node):
+                        find_req(graph_node, critical_path_ + [graph_node.id_])
+
+            find_req(self.head, [])
+
     def __init__(self, nodes_by_activity_id: {Hashable, Node} = None):
         self.nodes_by_activity_id: {Hashable, Node} = nodes_by_activity_id or dict()
-        self.critical_paths: [[Node, ], ] = []
+        # self.critical_paths: [[Node, ], ] = []
 
     def add_node(self, node: Node):
         self.nodes_by_activity_id[node.activity.id_] = node
@@ -331,20 +350,18 @@ class Network:
 
         """ Fix orphan tasks. """
         graphs: [Network.Graph, ] = self.add_apparent_activity_between_orphan_nodes(graph=graph)
-        Logger.info(f"Possible graphs: {len(graphs)}")
 
-        graph = graphs[0]
+        Logger.info(f"Solve: Possible graphs: {len(graphs)}")
 
         """ Traverse left. """
-        # Find last node.
-        self.fill_ls_lf_and_delay(graph.tail)
-
-        # for network in networks:
-        #     traverse_backward(network.nodes_by_activity_id)
+        for graph in graphs:
+            self.fill_ls_lf_and_delay(graph.tail)
 
         """ Get critical path, by selecting tasks with 0 possible delay. """
-        # There can be multiple critical paths.
-        # self.critical_paths = [[id1, id2...]]
+        for graph_idx, graph in enumerate(graphs):
+            graph.calculate_critical_paths()
+            Logger.info(f"Solve: Graph {graph_idx + 1}: "
+                        f"found {len(graph.critical_paths)} critical paths: {graph.critical_paths}")
 
         self.nodes_by_activity_id = graph.graph_node_by_activity_id
         return graphs
