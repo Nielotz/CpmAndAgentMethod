@@ -7,7 +7,9 @@ from kivy.core.window import Window
 
 class CPMapp(App):
     def build(self):
-        net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\test_mid_orphan.txt")
+        net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\121 - quick side task.txt")
+        # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\112 - two orphans.txt")
+        # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\111111 - straight path.txt")
         nn = net[0].solve()
 
         # gra = graph.GraphWidget()

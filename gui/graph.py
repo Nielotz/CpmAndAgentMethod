@@ -6,18 +6,15 @@ from kivy.uix.effectwidget import FXAAEffect, EffectWidget, HorizontalBlurEffect
 from math import sin, cos, atan , pi, sqrt
 from kivy.core.window import Window
 import cpm.network as network
-#To Do
-# Zapewnić by na siebie nie nachodziły
-# Dodać ścieżke krytyczną
-# Add
+
 
 class InfoWitdget(Widget):
     visible:float = 0.
 
-    def __init__(self, number: str = "233", earliest_time:int = 0, latest_time:int = 0, reserve_time:int = 0,pos:tuple[int,int]=(10,10),  **kwargs):
+    def __init__(self, name: str = "233", earliest_time:int = 0, latest_time:int = 0, reserve_time:int = 0,pos:tuple[int,int]=(10,10),  **kwargs):
         super(InfoWitdget, self).__init__(**kwargs)
         self.pos = pos
-        self.number = number
+        self.name = name
         with self.canvas:
             Color(.5, .5, 0.5)
             Rectangle(pos=self.pos)
@@ -46,16 +43,16 @@ class EventWidget(Widget):
     text_color: tuple[float,float,float] = (1,0,1)
     diameter: int = 75
     pos: tuple[int, int] = (20, 40)
-    number: str = "233"
+    name: str = "233"
     offset: int = 25
     earliest_time:int = 222
     latest_time:int = 122
     reserve_time:int = 123
     # info_widget_is_visible = False
 
-    def __init__(self, number: str = "1", earliest_time:int = 0, latest_time:int = 0, reserve_time:int = 0,  **kwargs):
+    def __init__(self, name: str = "1", earliest_time:int = 0, latest_time:int = 0, reserve_time:int = 0,  **kwargs):
         super(EventWidget, self).__init__(**kwargs)
-        self.number = number
+        self.name = name
         self.earliest_time = earliest_time
         self.latest_time = latest_time
         self.reserve_time = reserve_time
@@ -81,7 +78,7 @@ class EventWidget(Widget):
                          self.radius * sin(pi * 7 / 4) + self.center_of_circle[1]),
                          width=1)
 
-        label_of_number = Label(text=str(self.number), color = self.text_color)
+        label_of_number = Label(text=str(self.name), color = self.text_color)
         label_of_number.pos = (self.pos[0] - label_of_number.width / 2 + center_of_circle[0],
                                self.pos[1] - label_of_number.height / 2 + center_of_circle[1] + self.offset)
         self.add_widget(label_of_number)
@@ -101,7 +98,7 @@ class EventWidget(Widget):
                                self.pos[1] - label_of_number.height / 2 + center_of_circle[1])
         self.add_widget(label_of_latest_time)
 
-        self.info_widget = InfoWitdget(pos=self.pos, number=number)
+        self.info_widget = InfoWitdget(pos=self.pos, name=name)
         # self.add_widget(self.info_widget)
 
     def get_radius(self):
@@ -109,21 +106,7 @@ class EventWidget(Widget):
     
     def get_center_of_circle(self):
         return self.center_of_circle
-    
-    # def on_enter(self, window, pos):
-    #     if pos[0] > self.pos[0] and pos[0] < self.pos[0] + self.diameter:
-    #         if pos[1] > self.pos[1] and pos[1] < self.pos[1] + self.diameter:
-    #             print(self.number)
-    #             # self.info_widget.show()
-    #             if self.info_widget_is_visible == False:
-    #                 self.add_widget(self.info_widget, index=0)
-    #                 self.info_widget_is_visible = True
-    #     else:
-    #         if self.info_widget_is_visible == True:
-    #             self.info_widget_is_visible = False
-    #             # self.info_widget.hide()
-    #             self.remove_widget(self.info_widget)
-                
+     
 
 class ActionWidget(Widget):
     event_widget_0: EventWidget = EventWidget()
@@ -131,8 +114,10 @@ class ActionWidget(Widget):
     info_label = Label(text=str("eee"))
     middle =(0,0)
     dashed_lines = 4
-    color = (0,1,1)
-    critical_color = (0.5,0,0)
+    color = (0., 1., 1., 1.)
+    critical_color = (0.5, 0., 0., 1.)
+    label_background_color = (0., 1., 1., 1.)
+    label_text_color = (1.,0.,0., 1.)
 
     def __init__(self, 
                  action_name:str = "",
@@ -146,36 +131,63 @@ class ActionWidget(Widget):
         
         if is_critical:
             self.color = self.critical_color
-
+            self.label_background_color = self.critical_color
 
         self.event_widget_0 = event_widget_0
         self.event_widget_1 = event_widget_1
         self.info_label_text = action_name + " " + str(action_time)
 
         with self.canvas:
-            Color(self.color[0], self.color[1], self.color[2])
+            Color(self.color[0], self.color[1], self.color[2], self.color[3])
             radius_event_widget_0 = self.event_widget_0.get_radius() + 1
             radius_event_widget_1 = self.event_widget_1.get_radius() + 1
             p0 = self.event_widget_0.get_center_of_circle()
             p1 = self.event_widget_1.get_center_of_circle()
-            alpha = atan((p1[1] - p0[1]) / (p1[0] - p0[0]))
-            points = (radius_event_widget_0*cos(alpha)+p0[0],
-                      radius_event_widget_0*sin(alpha)+p0[1],
-                      -radius_event_widget_1*cos(alpha)+p1[0],
-                      -radius_event_widget_1*sin(alpha)+p1[1])
-            self.middle = ((points[0]+points[2]) / 2,
-                           (points[1]+points[3]) / 2)
+            try:
+                alpha = atan((p1[1] - p0[1]) / (p1[0] - p0[0]))
+                points = (radius_event_widget_0 * cos(alpha) + p0[0],
+                          radius_event_widget_0 * sin(alpha) + p0[1],
+                          -radius_event_widget_1 * cos(alpha) + p1[0],
+                          -radius_event_widget_1 * sin(alpha) + p1[1]
+                          )
+                
             
+                norm_point = (points[2] - points[0],
+                            points[3] - points[1])
+                
+                fi = atan(norm_point[1] / norm_point[0])
+            except:
+                alpha = 0
+                if p0[1] > p1[1]:
+                    points = (p0[0],
+                              p0[1] - radius_event_widget_0,
+                              p1[0],
+                              p1[1] + radius_event_widget_1)
+                    fi = pi * 3 / 2
+                else:
+                    points = (p0[0],
+                              p0[1] + radius_event_widget_0,
+                              p1[0],
+                              p1[1] - radius_event_widget_1)
+                    fi = pi / 2
+                alpha = fi
+
+            self.middle = ((points[0] + points[2]) / 2,
+                           (points[1] + points[3]) / 2)
+
             norm_point = (points[2] - points[0],
                           points[3] - points[1])
+            
             radius = (sqrt(norm_point[0] * norm_point[0] + norm_point[1] * norm_point[1]))
-            fi = atan(norm_point[1] / norm_point[0])
 
-            if not is_real:      
-                radius_change = radius / (self.dashed_lines * 2)-1
+            if is_real: 
+                Line(points=points,
+                     width=2)
+            else:      
+                radius_change = radius / (self.dashed_lines * 2) - 1
                 
                 sth_radius = radius
-                while sth_radius > 0 :
+                while sth_radius > 0:
                     sth_point = (sth_radius * cos(fi) + points[0],
                                  sth_radius * sin(fi) + points[1],
                                  (sth_radius - radius_change) * cos(fi) + points[0],
@@ -184,13 +196,10 @@ class ActionWidget(Widget):
                          width=2)
                     sth_radius -= radius_change * 2
             
-            else:
-                Line(points=points,
-                     width=2)
-
+            
             #Draw Arrow
             arrowhead_legth:float = 20
-            arrowhead_angle:float = pi/6
+            arrowhead_angle:float = pi / 6
             arrow_vec = (arrowhead_legth,
                          0,
                          arrowhead_legth,
@@ -206,7 +215,6 @@ class ActionWidget(Widget):
                          arrow_vec[2]+ points[2],
                          arrow_vec[3]+ points[3])
 
-
             arrow_points = (points[2],
                             points[3],
                             arrow_vec[0],
@@ -217,10 +225,25 @@ class ActionWidget(Widget):
                             arrow_vec[3])
             Line(points=arrow_points,
                      width=1.5)
-
-        self.info_label = Label(text=self.info_label_text, size=(50,20), color=(1.,0.,0.),font_size=12)
-        self.info_label.pos = (self.middle[0]-self.info_label.size[0]/2,
-                               self.middle[1]-self.info_label.size[1]/2)
+        
+        label_size = 50
+        if len(self.info_label_text) > 8:
+            label_size = int(len(self.info_label_text) * 50 / 8)
+        self.info_label = Label(text=self.info_label_text,
+                                size=(label_size, 20), 
+                                color=(self.label_text_color[0],
+                                       self.label_text_color[1],
+                                       self.label_text_color[2]), 
+                                font_size=12)
+        
+        self.info_label.pos = (self.middle[0] - self.info_label.size[0] / 2,
+                               self.middle[1] - self.info_label.size[1] / 2)
+        with self.info_label.canvas.before:
+            Color(self.label_background_color[0],
+                  self.label_background_color[1],
+                  self.label_background_color[2],
+                  self.label_background_color[3])
+            Rectangle(pos=self.info_label.pos, size=self.info_label.size)
         self.add_widget(self.info_label)
 
         
@@ -316,76 +339,75 @@ class GraphHelpWidget(Widget):
 
 class GraphWidget(EffectWidget):
     is_move_enabled = False 
-    layer_size = 150
+    x_distance = 200
+    y_distance = 150
 
     def __init__(self, network:network.Network, **kwargs):
         super(GraphWidget, self).__init__(**kwargs)
         self.network = network
         #self.effects = [FXAAEffect()]
         
-        # self.add_widget(Button(text="awdawd"))
         self.old_touch_pos = [0,0]
         self.draw_graph(self.network)
     
-    def draw_graph(self, network:network.Network):
-        max_event_widgets = len(network.nodes_by_id)
-        print(max_event_widgets)
-        prev_event_widgets_number:dict(str, int) = dict()
-        next_event_widgets_number:dict(str, int) = dict()
+    def draw_graph(self, network:network.Network.Graph):
         event_widgets = dict()
-        action_widgets:dict(str, ActionWidget) = dict()
+        action_widgets = dict()
 
-        for node in network.nodes_by_activity_id.values():
-            ids = node.id_.split("-")
-            if ids[1] in prev_event_widgets_number:
-                prev_event_widgets_number[ids[1]] += 1
-            else:
-                prev_event_widgets_number[ids[1]] = 1
-            if ids[0] in next_event_widgets_number:
-                next_event_widgets_number[ids[0]] += 1
-            else:
-                next_event_widgets_number[ids[0]] = 1
+        network.head.node.event
 
+        x_pos = 0
+        y_pos = self.y_distance
+        
+        def is_on_critical_path(node_id:str, critical_paths:list)->bool:
+            for path in critical_paths:
+                for path_node_id in path:
+                    if path_node_id == node_id:
+                        return True
+            return False
+        
+        def draw_node(node:network.GraphNode, x_pos, y_pos):
+            if node.id_ == 'FINISH' or not node.id_.find('apparent_'):
+                return
+            for tmp in node.next_graph_nodes:
+                draw_node(tmp, x_pos + self.x_distance, y_pos)
+                y_pos += self.y_distance
+            
+            event_widgets[node.id_] = EventWidget(name=node.id_,
+                                                  pos=(x_pos, y_pos - self.y_distance),
+                                                  earliest_time=node.node.event.early_final,
+                                                  latest_time=node.node.event.late_final,
+                                                  reserve_time=node.node.event.possible_delay)
+        draw_node(network.head,x_pos,y_pos)
 
-        for node in network.nodes_by_activity_id.values():
-            ids = node.id_.split("-")
-            if not ids[0] in event_widgets:
-                event_widgets[ids[0]] = EventWidget(pos=(150 * int(ids[0]) - 150, 300), 
-                                                    number=ids[0], 
-                                                    earliest_time = node.early_start,
-                                                    latest_time = node.late_start,
-                                                    reserve_time = node.possible_delay)
-            if not ids[1] in event_widgets:
-                event_widgets[ids[1]] = EventWidget(pos=(150 * int(ids[1]) - 150, 300), 
-                                                    number=ids[1],
-                                                    earliest_time = node.early_final,
-                                                    latest_time = node.late_final,
-                                                    reserve_time = node.possible_delay)
+        # Genereate arrows
+        for activity_key in network.graph_node_by_activity_id:
+            activity:network.GraphNode = network.graph_node_by_activity_id[activity_key]
+            prev_nodes = activity.prev_graph_nodes
+            for node in prev_nodes:
+                if not str(node.id_).find("apparent_"):
+                    action_widgets[node.id_] = ActionWidget(action_name=node.id_,
+                                                            event_widget_0=event_widgets[node.prev_graph_nodes[0].id_],
+                                                            event_widget_1=event_widgets[activity.id_],
+                                                            action_time=activity.node.activity.duration,
+                                                            is_real=False,
+                                                            is_critical=is_on_critical_path(activity.id_, network.critical_paths)
+                                                            )
+                    continue
+                if not activity.id_ in action_widgets and str(node.id_).find("apparent_") and activity.id_ in event_widgets:
+                    action_widgets[activity.id_] = ActionWidget(action_name=activity.id_,
+                                                            event_widget_0=event_widgets[node.id_],
+                                                            event_widget_1=event_widgets[activity.id_],
+                                                            action_time=activity.node.activity.duration,
+                                                            is_critical=is_on_critical_path(activity.id_, network.critical_paths)
+                                                            )
 
-            if next_event_widgets_number[ids[0]] > 1:
-                event_widgets[ids[1]] = EventWidget(pos=(150 * int(ids[1]) - 150 , # * next_event_widgets_number[ids[0]]
-                                                         300 + 150*(next_event_widgets_number[ids[0]] - 1)), 
-                                                    number=ids[1])
-                next_event_widgets_number[ids[0]] -= 1
+        for node in event_widgets:
+            self.add_widget(event_widgets[node])    
 
-
-        for key in event_widgets:       
-            self.add_widget(event_widgets[key])
-
-
-        for node in network.nodes_by_activity_id.values():
-            ids = node.id_.split("-")
-            action_widgets[node.id_] = ActionWidget(action_name = node.id_,
-                                                     action_time = node.duration, 
-                                                     event_widget_0 = event_widgets[ids[0]],
-                                                     event_widget_1 = event_widgets[ids[1]]) 
-            # action_widgets[node.id_].set_event_widget_0(event_widgets[ids[0]])
-            # action_widgets[node.id_].set_event_widget_1(event_widgets[ids[1]])
-          
-
-        for key in action_widgets:
-            self.add_widget(action_widgets[key],index=1000)
-
+        for action in action_widgets:
+            self.add_widget(action_widgets[action])
+      
     def on_touch_move(self, touch):
         modifier = 0.7
         if self.is_move_enabled:
@@ -427,6 +449,10 @@ class GraphMeneger(EffectWidget):
         move_button.bind(on_press = self.move_button_callback) # type: ignore
         self.add_widget(move_button)
 
+        # Pirnt net
+        for node in net.graph_node_by_activity_id:
+            print(node)
+            print(net.graph_node_by_activity_id[node])
 
     def help_button_callback(self, event):
         if self.is_help_page_enabled == True:
