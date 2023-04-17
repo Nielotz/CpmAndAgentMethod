@@ -4,7 +4,8 @@ from kivy.graphics import Line, Ellipse, Color, Rectangle
 from kivy.uix.label import Label
 from kivy.uix.effectwidget import EffectWidget
 from math import sin, cos, atan , pi, sqrt
-import cpm.solver as network
+import cpm.solver as solver
+import cpm.network.network as networ
 
 
 class InfoWitdget(Widget):
@@ -341,7 +342,7 @@ class GraphWidget(EffectWidget):
     x_distance = 200
     y_distance = 150
 
-    def __init__(self, network: network.Solver, **kwargs):
+    def __init__(self, network: solver.Solver, **kwargs):
         super(GraphWidget, self).__init__(**kwargs)
         self.network = network
         #self.effects = [FXAAEffect()]
@@ -349,7 +350,7 @@ class GraphWidget(EffectWidget):
         self.old_touch_pos = [0,0]
         self.draw_graph(self.network)
     
-    def draw_graph(self, network: network.Solver.Graph):
+    def draw_graph(self, network: networ.Network):
         event_widgets = dict()
         action_widgets = dict()
 
@@ -365,10 +366,10 @@ class GraphWidget(EffectWidget):
                         return True
             return False
         
-        def draw_node(node:network.NetworkNode, x_pos, y_pos):
+        def draw_node(node:networ.NetworkNode, x_pos, y_pos):
             if node.id_ == 'FINISH' or not node.id_.find('apparent_'):
                 return
-            for tmp in node.next_graph_nodes:
+            for tmp in node.next_network_nodes:
                 draw_node(tmp, x_pos + self.x_distance, y_pos)
                 y_pos += self.y_distance
             
@@ -380,13 +381,13 @@ class GraphWidget(EffectWidget):
         draw_node(network.head,x_pos,y_pos)
 
         # Genereate arrows
-        for activity_key in network.graph_node_by_activity_id:
-            activity:network.NetworkNode = network.graph_node_by_activity_id[activity_key]
-            prev_nodes = activity.prev_graph_nodes
+        for activity_key in network.network_node_by_activity_id:
+            activity:network.NetworkNode = network.network_node_by_activity_id[activity_key]
+            prev_nodes = activity.prev_network_nodes
             for node in prev_nodes:
                 if not str(node.id_).find("apparent_"):
                     action_widgets[node.id_] = ActionWidget(action_name=node.id_,
-                                                            event_widget_0=event_widgets[node.prev_graph_nodes[0].id_],
+                                                            event_widget_0=event_widgets[node.prev_network_nodes[0].id_],
                                                             event_widget_1=event_widgets[activity.id_],
                                                             action_time=activity.node.activity.duration,
                                                             is_real=False,
@@ -449,9 +450,9 @@ class GraphMeneger(EffectWidget):
         self.add_widget(move_button)
 
         # Pirnt net
-        for node in net.graph_node_by_activity_id:
+        for node in net.network_node_by_activity_id:
             print(node)
-            print(net.graph_node_by_activity_id[node])
+            print(net.network_node_by_activity_id[node])
 
     def help_button_callback(self, event):
         if self.is_help_page_enabled == True:
