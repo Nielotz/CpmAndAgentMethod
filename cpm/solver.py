@@ -10,12 +10,6 @@ from cpm.node import Node, ApparentNode, FinalNode
 class Solver:
     """ Holds Nodes and calculates CPM method params. """
 
-    def __init__(self, nodes_by_activity_id: {Hashable, Node} = None):
-        self._nodes_by_activity_id: {Hashable, Node} = nodes_by_activity_id or dict()
-
-    def add_node(self, node: Node):
-        self._nodes_by_activity_id[node.activity.id_] = node
-
     def _fill_es_and_ef(self, head: NetworkNode):
         """
         Traverse events forward - from start to end.
@@ -139,7 +133,7 @@ class Solver:
         for prev_node in tail.prev_network_nodes:
             fill_ls_lf_and_delay_req(prev_node)
 
-    def solve(self) -> [Self, ]:
+    def solve(self, nodes_by_activity_id: {Hashable, Node} = None) -> [Self, ]:
         """
         Organize tasks, create network, add apparent tasks, solve: missing nodes' params and critical path.
 
@@ -153,7 +147,7 @@ class Solver:
         """
 
         """ Fix order and build network. """
-        network: Network = Network(nodes=self._nodes_by_activity_id)
+        network: Network = Network(nodes=nodes_by_activity_id)
 
         """ Traverse right. """
         self._fill_es_and_ef(network.head)
@@ -175,6 +169,6 @@ class Solver:
 
         return networks
 
-    def __repr__(self):
-        return f"Network:\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self._nodes_by_activity_id.values()])
+    # def __repr__(self):
+    #     return f"Network:\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self._nodes_by_activity_id.values()])
         # f"\t Critical path:" + "\t\t".join([str(cp) for cp in self.critical_paths])

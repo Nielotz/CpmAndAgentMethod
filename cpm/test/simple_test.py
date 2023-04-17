@@ -12,7 +12,7 @@ def runner(path: str):
     test_network_data: {Hashable, Node}; expected_network: Network  # Type hinting for PyCharm
     test_network_data, expected_network = cpm.test.data_loader.load_data_from_file(path)
 
-    result_network: Network = Solver(nodes_by_activity_id=test_network_data).solve()[0]
+    result_network: Network = Solver().solve(nodes_by_activity_id=test_network_data)[0]
 
     result_nodes: [Node, ] = [network_node.node for network_node in result_network.network_node_by_activity_id.values()]
     expected_nodes: [Node, ] = [node_.node for node_ in tuple(expected_network.network_node_by_activity_id.values())]
