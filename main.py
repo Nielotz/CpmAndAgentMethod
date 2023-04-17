@@ -1,13 +1,13 @@
-import cpm.cpm as cpm
 from kivy.app import App
 import gui.graph as graph
-import cpm.network as network
+import cpm.solver as network
 import cpm.test.data_loader as dl
 from kivy.core.window import Window
 
 class CPMapp(App):
     def build(self):
-        net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\121 - quick side task.txt")
+        net: tuple[
+            network.Solver, network.Solver] = dl.load_data_from_file(path="cpm\\test_data\\121 - quick side task.txt")
         # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\112 - two orphans.txt")
         # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\111111 - straight path.txt")
         nn = net[0].solve()
