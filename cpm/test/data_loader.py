@@ -1,14 +1,16 @@
 import data_input
-from cpm.network import Network, Node
+from cpm.solver import Solver
+from cpm.node import Node
 
-def load_data_from_file(path: str = "cpm/test_data/111111 - straight path.txt", sep: str = ";") -> [Network, Network]:
+
+def load_data_from_file(path: str = "cpm/test_data/111111 - straight path.txt", sep: str = ";") -> [Solver, Solver]:
     """
     Load test data from file.
 
-    :return test network, expected network
+    @return test network, expected network
     """
-    test_network: Network = Network()
-    expected_network: Network = Network()
+    test_network: Solver = Solver()
+    expected_network: Solver = Solver()
 
     read_data = data_input.load_data_from_file(path=path, sep=sep)
 

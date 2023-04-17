@@ -1,10 +1,9 @@
-# noinspection PyUnresolvedReferences
-from cpm.network import Network
+from cpm.solver import Solver
 
 
 class CPM:
     def __init__(self):
-        self.network: Network = Network()
+        self.network: Solver = Solver()
 
     def load_data_from_user(self):
         """ Load data from user using UI. """

@@ -1,11 +1,10 @@
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
-from kivy.graphics import Line, Ellipse, Color, Callback, Rectangle
+from kivy.graphics import Line, Ellipse, Color, Rectangle
 from kivy.uix.label import Label
-from kivy.uix.effectwidget import FXAAEffect, EffectWidget, HorizontalBlurEffect
+from kivy.uix.effectwidget import EffectWidget
 from math import sin, cos, atan , pi, sqrt
-from kivy.core.window import Window
-import cpm.network as network
+import cpm.solver as network
 
 
 class InfoWitdget(Widget):
@@ -342,7 +341,7 @@ class GraphWidget(EffectWidget):
     x_distance = 200
     y_distance = 150
 
-    def __init__(self, network:network.Network, **kwargs):
+    def __init__(self, network: network.Solver, **kwargs):
         super(GraphWidget, self).__init__(**kwargs)
         self.network = network
         #self.effects = [FXAAEffect()]
@@ -350,7 +349,7 @@ class GraphWidget(EffectWidget):
         self.old_touch_pos = [0,0]
         self.draw_graph(self.network)
     
-    def draw_graph(self, network:network.Network.Graph):
+    def draw_graph(self, network: network.Solver.Graph):
         event_widgets = dict()
         action_widgets = dict()
 
@@ -366,7 +365,7 @@ class GraphWidget(EffectWidget):
                         return True
             return False
         
-        def draw_node(node:network.GraphNode, x_pos, y_pos):
+        def draw_node(node:network.NetworkNode, x_pos, y_pos):
             if node.id_ == 'FINISH' or not node.id_.find('apparent_'):
                 return
             for tmp in node.next_graph_nodes:
@@ -382,7 +381,7 @@ class GraphWidget(EffectWidget):
 
         # Genereate arrows
         for activity_key in network.graph_node_by_activity_id:
-            activity:network.GraphNode = network.graph_node_by_activity_id[activity_key]
+            activity:network.NetworkNode = network.graph_node_by_activity_id[activity_key]
             prev_nodes = activity.prev_graph_nodes
             for node in prev_nodes:
                 if not str(node.id_).find("apparent_"):
