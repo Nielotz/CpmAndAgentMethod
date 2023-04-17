@@ -137,7 +137,7 @@ class Solver:
             fill_ls_lf_and_delay_req(prev_node)
 
     @classmethod
-    def solve(cls, nodes_by_activity_id: {Hashable, Node} = None) -> [Self, ]:
+    def solve(cls, nodes_by_activity_id: {Hashable, Node} = None) -> [Network, ]:
         """
         Organize tasks, create network, add apparent tasks, solve: missing nodes' params and critical path.
 
