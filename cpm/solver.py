@@ -10,7 +10,8 @@ from cpm.node import Node, ApparentNode, FinalNode
 class Solver:
     """ Holds Nodes and calculates CPM method params. """
 
-    def _fill_es_and_ef(self, head: NetworkNode):
+    @staticmethod
+    def _fill_es_and_ef(head: NetworkNode):
         """
         Traverse events forward - from start to end.
 
@@ -39,7 +40,8 @@ class Solver:
         for network_node in head.next_network_nodes:
             fill_es_and_ef_req(network_node)
 
-    def _add_apparent_activity_between_orphan_nodes(self, network: Network) -> [Network]:
+    @staticmethod
+    def _add_apparent_activity_between_orphan_nodes(network: Network) -> [Network]:
         """
         Fix orphan tasks.
 
@@ -96,7 +98,8 @@ class Solver:
 
         return possible_networks
 
-    def _fill_ls_lf_and_delay(self, tail: NetworkNode):
+    @staticmethod
+    def _fill_ls_lf_and_delay(tail: NetworkNode):
         """
         Traverse events from final to the start.
 
@@ -133,7 +136,8 @@ class Solver:
         for prev_node in tail.prev_network_nodes:
             fill_ls_lf_and_delay_req(prev_node)
 
-    def solve(self, nodes_by_activity_id: {Hashable, Node} = None) -> [Self, ]:
+    @classmethod
+    def solve(cls, nodes_by_activity_id: {Hashable, Node} = None) -> [Self, ]:
         """
         Organize tasks, create network, add apparent tasks, solve: missing nodes' params and critical path.
 
@@ -150,16 +154,16 @@ class Solver:
         network: Network = Network(nodes=nodes_by_activity_id)
 
         """ Traverse right. """
-        self._fill_es_and_ef(network.head)
+        cls._fill_es_and_ef(network.head)
 
         """ Fix orphan tasks. """
-        networks: [Network, ] = self._add_apparent_activity_between_orphan_nodes(network=network)
+        networks: [Network, ] = cls._add_apparent_activity_between_orphan_nodes(network=network)
 
         Logger.info(f"Solve: Possible networks: {len(networks)}")
 
         """ Traverse left. """
         for network in networks:
-            self._fill_ls_lf_and_delay(network.tail)
+            cls._fill_ls_lf_and_delay(network.tail)
 
         """ Get critical path, by selecting tasks with 0 possible delay. """
         for network_idx, network in enumerate(networks):
