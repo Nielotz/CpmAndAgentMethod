@@ -1,18 +1,22 @@
+from typing import Hashable
+
 import pytest
 
 import cpm.test.data_loader
-from cpm.network.network import Network
+from cpm.network.network import Network, NetworkNode
 from cpm.solver import Solver
 from cpm.node import Node
 
 
 def runner(path: str):
-    test_network: Solver; expected_network: Solver  # Type hinting for PyCharm
-    test_network, expected_network = cpm.test.data_loader.load_data_from_file(path)
-    result_network: Network = test_network.solve()[0]
+    test_network_data: {Hashable, Node}; expected_network: Network  # Type hinting for PyCharm
+    test_network_data, expected_network = cpm.test.data_loader.load_data_from_file(path)
 
-    result_nodes = [network_node.node for network_node in result_network.network_node_by_activity_id.values()]
-    expected_nodes = tuple(expected_network._nodes_by_activity_id.values())
+    result_network: Network = Solver(nodes_by_activity_id=test_network_data).solve()[0]
+
+    result_nodes: [Node, ] = [network_node.node for network_node in result_network.network_node_by_activity_id.values()]
+    expected_nodes: [Node, ] = [node_.node for node_ in tuple(expected_network.network_node_by_activity_id.values())]
+
 
     # assert test_network.critical_paths == expected_network.critical_paths
     for test_node in result_nodes:
@@ -24,7 +28,7 @@ def runner(path: str):
             pytest.fail("Node not found")
 
     for test_node in result_nodes:
-        expected_node: Node =  expected_network._nodes_by_activity_id[test_node.activity.id_]
+        expected_node: Node =  expected_network.network_node_by_activity_id[test_node.activity.id_].node
         assert expected_node.event.early_start == test_node.event.early_start
         assert expected_node.event.early_final == test_node.event.early_final
         assert expected_node.event.late_start == test_node.event.late_start

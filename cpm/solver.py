@@ -16,41 +16,6 @@ class Solver:
     def add_node(self, node: Node):
         self._nodes_by_activity_id[node.activity.id_] = node
 
-    def _sorted(self) -> Self:
-        """ Sorts nodes chronologically.
-
-            Example:
-                    |-H-I
-                A-B-C-E-F-G
-                  |-D
-                May be sorted to:
-                    ABCEFG D HI
-                    ABC D EFG D HI
-                    AB D CEFG  HI
-                    AB C HI D EFG
-                    etc.
-                But never to:
-                    D ABC...
-                    A HI ...
-        """
-        nodes = self._nodes_by_activity_id
-
-        to_parse: [Hashable, ] = list(nodes.keys())[::-1]
-        parsed: Solver = Solver()  # Output dict.
-        while to_parse:
-            # Reverse order to allow to remove from list without changing positions of others.
-            for node_id in to_parse[::-1]:
-                node: Node = nodes[node_id]
-
-                for prev_id in node.activity.prev_activity:
-                    if prev_id in to_parse:
-                        continue
-
-                to_parse.remove(node_id)
-                parsed.add_node(node)
-
-        return parsed
-
     def _fill_es_and_ef(self, head: NetworkNode):
         """
         Traverse events forward - from start to end.
@@ -178,7 +143,7 @@ class Solver:
         """
         Organize tasks, create network, add apparent tasks, solve: missing nodes' params and critical path.
 
-        Fix order and build network.
+        Build network.
         Traverse right - fill es and ef.
         Fix orphan tasks.
         Traverse left - fill ls, lf and delay.
@@ -188,8 +153,7 @@ class Solver:
         """
 
         """ Fix order and build network. """
-        sorted_nodes = self._sorted()
-        network: Network = Network(sorted_nodes=sorted_nodes._nodes_by_activity_id)
+        network: Network = Network(nodes=self._nodes_by_activity_id)
 
         """ Traverse right. """
         self._fill_es_and_ef(network.head)
