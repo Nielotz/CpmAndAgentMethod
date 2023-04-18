@@ -61,7 +61,7 @@ class Solver:
         find_orphan_nodes_req(network.head)
 
         early_finals = [(network_node.node.event.early_final, network_node) for network_node in orphans]
-        final_time = max(early_finals)[0]
+        final_time = max(early_finals, key=lambda elem: elem[0])[0]
         last_nodes: [NetworkNode] = [node_ for early_final, node_ in early_finals if early_final == final_time]
 
         possible_networks: [Network] = []
