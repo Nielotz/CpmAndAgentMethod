@@ -1,37 +1,46 @@
+from typing import Hashable
+
 from kivy.app import App
-import gui.graph as graph
-import cpm.solver as network
-import cpm.test.data_loader as dl
 from kivy.core.window import Window
 
+import data_input
+import gui.graph as graph
+from cpm.network.network import Network
+from cpm.node import Node
+from cpm.solver import Solver
+
+
 class CPMapp(App):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.result_networks: [Network, ] = None
+
+    @staticmethod
+    def load_data_from_user(path: str) -> {Hashable, Node}:
+        """ Load data from user.
+
+        @return: dict{Node.id_, Node} - dict of nodes with nodes' id as a key
+        """
+        nodes: {Hashable, Node} = dict()
+        read_data = data_input.load_data_from_file(path=path)
+        for id_, prev_ids, duration in read_data[tuple(read_data.keys())[0]]:
+            nodes[id_] = Node(id_, prev_ids.split(",") if prev_ids else [], float(duration))
+        return nodes
+
+    def show_result_network(self):
+        pass
+
     def build(self):
-        net: tuple[
-            network.Solver, network.Solver] = dl.load_data_from_file(path="cpm\\test_data\\121 - quick side task.txt")
-        # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\112 - two orphans.txt")
-        # net: tuple[network.Network, network.Network] = dl.load_data_from_file(path="cpm\\test_data\\111111 - straight path.txt")
-        nn = net[0].solve()
+        Window.clearcolor = (218/255, 222/255, 206/255, 1.0)
+
+        nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/12311 - 2 side orphans.txt")
+
+        networks: [Network, ] = Solver(nodes_by_activity_id=nodes_by_id).solve()
+        # networks: [Network, ] = Solver.solve(nodes_by_activity_id=self.network_data)
 
         # gra = graph.GraphWidget()
         # gra.set_network(net[0])
         # gra.draw_graph(nn[0])
-        graph_meneger = graph.GraphMeneger(net = nn[0], size=(5000,5000), size_hint=(None, None))
-        return graph_meneger
+        return graph.GraphMeneger(net = networks, size=(5000,5000), size_hint=(None, None))
 
-Window.clearcolor = (218/255, 222/255, 206/255, 1.0)
 CPMapp().run()
-
-# """ Create CPM sth. """
-# brrr_system = cpm.CPM()
-
-# """ Load data from user (to load data from file, see cpm/test/data_loader.py). """
-# # Input
-# brrr_system.load_data_from_user ()
-
-# """ Solve network. """
-# # Brrrrr
-# brrr_system.solve()
-
-# # Output
-# brrr_system.print_result_network()
-# # brrr_system.show_result_network()
