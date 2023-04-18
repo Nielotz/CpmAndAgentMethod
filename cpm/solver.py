@@ -10,48 +10,8 @@ from cpm.node import Node, ApparentNode, FinalNode
 class Solver:
     """ Holds Nodes and calculates CPM method params. """
 
-    def __init__(self, nodes_by_activity_id: {Hashable, Node} = None):
-        self._nodes_by_activity_id: {Hashable, Node} = nodes_by_activity_id or dict()
-
-    def add_node(self, node: Node):
-        self._nodes_by_activity_id[node.activity.id_] = node
-
-    def _sorted(self) -> Self:
-        """ Sorts nodes chronologically.
-
-            Example:
-                    |-H-I
-                A-B-C-E-F-G
-                  |-D
-                May be sorted to:
-                    ABCEFG D HI
-                    ABC D EFG D HI
-                    AB D CEFG  HI
-                    AB C HI D EFG
-                    etc.
-                But never to:
-                    D ABC...
-                    A HI ...
-        """
-        nodes = self._nodes_by_activity_id
-
-        to_parse: [Hashable, ] = list(nodes.keys())[::-1]
-        parsed: Solver = Solver()  # Output dict.
-        while to_parse:
-            # Reverse order to allow to remove from list without changing positions of others.
-            for node_id in to_parse[::-1]:
-                node: Node = nodes[node_id]
-
-                for prev_id in node.activity.prev_activity:
-                    if prev_id in to_parse:
-                        continue
-
-                to_parse.remove(node_id)
-                parsed.add_node(node)
-
-        return parsed
-
-    def _fill_es_and_ef(self, head: NetworkNode):
+    @staticmethod
+    def _fill_es_and_ef(head: NetworkNode):
         """
         Traverse events forward - from start to end.
 
@@ -80,7 +40,8 @@ class Solver:
         for network_node in head.next_network_nodes:
             fill_es_and_ef_req(network_node)
 
-    def _add_apparent_activity_between_orphan_nodes(self, network: Network) -> [Network]:
+    @staticmethod
+    def _add_apparent_activity_between_orphan_nodes(network: Network) -> [Network]:
         """
         Fix orphan tasks.
 
@@ -137,7 +98,8 @@ class Solver:
 
         return possible_networks
 
-    def _fill_ls_lf_and_delay(self, tail: NetworkNode):
+    @staticmethod
+    def _fill_ls_lf_and_delay(tail: NetworkNode):
         """
         Traverse events from final to the start.
 
@@ -174,11 +136,12 @@ class Solver:
         for prev_node in tail.prev_network_nodes:
             fill_ls_lf_and_delay_req(prev_node)
 
-    def solve(self) -> [Self, ]:
+    @classmethod
+    def solve(cls, nodes_by_activity_id: {Hashable, Node} = None) -> [Network, ]:
         """
         Organize tasks, create network, add apparent tasks, solve: missing nodes' params and critical path.
 
-        Fix order and build network.
+        Build network.
         Traverse right - fill es and ef.
         Fix orphan tasks.
         Traverse left - fill ls, lf and delay.
@@ -188,20 +151,19 @@ class Solver:
         """
 
         """ Fix order and build network. """
-        sorted_nodes = self._sorted()
-        network: Network = Network(sorted_nodes=sorted_nodes._nodes_by_activity_id)
+        network: Network = Network(nodes=nodes_by_activity_id)
 
         """ Traverse right. """
-        self._fill_es_and_ef(network.head)
+        cls._fill_es_and_ef(network.head)
 
         """ Fix orphan tasks. """
-        networks: [Network, ] = self._add_apparent_activity_between_orphan_nodes(network=network)
+        networks: [Network, ] = cls._add_apparent_activity_between_orphan_nodes(network=network)
 
         Logger.info(f"Solve: Possible networks: {len(networks)}")
 
         """ Traverse left. """
         for network in networks:
-            self._fill_ls_lf_and_delay(network.tail)
+            cls._fill_ls_lf_and_delay(network.tail)
 
         """ Get critical path, by selecting tasks with 0 possible delay. """
         for network_idx, network in enumerate(networks):
@@ -211,6 +173,6 @@ class Solver:
 
         return networks
 
-    def __repr__(self):
-        return f"Network:\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self._nodes_by_activity_id.values()])
+    # def __repr__(self):
+    #     return f"Network:\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self._nodes_by_activity_id.values()])
         # f"\t Critical path:" + "\t\t".join([str(cp) for cp in self.critical_paths])

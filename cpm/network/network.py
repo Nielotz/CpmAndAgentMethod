@@ -7,7 +7,8 @@ class NetworkNode:
     """
     Double linked node with cpm.Node payload.
 
-    id_ == node.activity.id_"""
+    id_ == node.activity.id_
+    """
 
     def __init__(self, prev_network_nodes: [Self, ] = None, next_network_nodes: [Self, ] = None, node: Node = None):
         self.prev_network_nodes: [Self, ] = prev_network_nodes or []
@@ -33,12 +34,17 @@ class Network:
 
         return self._critical_paths
 
-    def __init__(self, sorted_nodes: {Hashable: Node}):
+    @critical_paths.setter
+    def critical_paths(self, critical_paths: [[Hashable, ], ]):
+        self._critical_paths = critical_paths
+    
+    def __init__(self, nodes: {Hashable: Node}):
         """
-        Create Network from sorted nodes.
+        Create Network from nodes.
 
-        @param sorted_nodes: {Node.id_: Node}, nodes in chronological order (prev before next) from which create network
+        @param nodes: {Node.id_: Node} - nodes from which create network
         """
+        sorted_nodes = self._sorted(nodes)
         self.head: NetworkNode = NetworkNode(node=StartNode())
         # noinspection PyTypeChecker
         self.tail: NetworkNode = None
@@ -64,6 +70,39 @@ class Network:
 
                     prev_network_node.next_network_nodes.append(curr_network_node)
                     self.network_node_by_activity_id[node_id] = curr_network_node
+
+    def _sorted(self, nodes: {Hashable: Node}) -> {Hashable: Node}:
+        """ Sorts nodes chronologically.
+
+            Example:
+                    |-H-I
+                A-B-C-E-F-G
+                  |-D
+                May be sorted to:
+                    ABCEFG D HI
+                    ABC D EFG D HI
+                    AB D CEFG  HI
+                    AB C HI D EFG
+                    etc.
+                But never to:
+                    D ABC...
+                    A HI ...
+        """
+        to_parse: [Hashable, ] = list(nodes.keys())[::-1]
+        parsed: {Hashable: Node} = {}  # Output dict.
+        while to_parse:
+            # Reverse order to allow to remove from list without changing positions of others.
+            for node_id in to_parse[::-1]:
+                node: Node = nodes[node_id]
+
+                for prev_id in node.activity.prev_activity:
+                    if prev_id in to_parse:
+                        continue
+
+                to_parse.remove(node_id)
+                parsed[node_id] = node
+
+        return parsed
 
     def calculate_critical_paths(self) -> [[Hashable, ], ]:
         """ Calculate critical paths. """
@@ -103,3 +142,5 @@ class Network:
         print(f"{summarize_node(self.head)}")
         for child in self.head.next_network_nodes:
             print_children_req(child, prefix_size=1)
+
+
