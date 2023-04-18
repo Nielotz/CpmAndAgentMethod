@@ -1,0 +1,27 @@
+#   | ID     ES  LS |
+#   | DELAY  EF  LF |
+#
+#        OPTION 1: Critical path: A2           OPTION 2: Critical path: A2           OPTION 3: Critical path: C2
+#
+#              || 1 0 2 ||               |               | 1 0 2 |               |               | 1 0 2 |
+#              || 0 0 2 ||               |               | 0 0 2 |               |               | 0 0 2 |
+#             //          \              |              /          \             |              /          \
+#            A2           a1             |            A2           a1            |            A2           a1
+#          //               \            |           /               \           |           /               \
+# || 0 0 0 ||        B2       | 2 0 2 |  |  | 0 0 0 |        B2       | 2 0 2 |  |  | 0 0 0 |        B2       | 2 0 2 |
+# || 0 0 0 ||        -->      | 0 0 2 |  |  | 0 0 0 |        ==>      | 0 0 2 |  |  | 0 0 0 |        -->      | 0 0 2 |
+#           \               /            |           \               /           |          \\               /
+#            C2           a2             |            C2           a2            |            C2           a2
+#              \          /              |              \          /             |             \\          /
+#               | 3 0 2 |                |               | 3 0 2 |               |               | 3 0 2 |
+#               | 0 0 2 |                |               | 0 0 2 |               |               | 0 0 2 |
+
+
+STHUNIQUE DATA
+#Czynność;Czynność bezpośrednio poprzedzająca;Czas trwania
+A2;                         ;                       2
+B2;                         ;                       2
+C2;                         ;                       2
+
+
+
