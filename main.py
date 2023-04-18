@@ -34,13 +34,14 @@ class CPMapp(App):
         Window.clearcolor = (218/255, 222/255, 206/255, 1.0)
 
         nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/12311 - 2 side orphans.txt")
+        # nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/131 - multiple possible networks (3).txt")
+        # nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/124 - 2 possible networks and 2 critical paths per network.txt")
 
-        networks: [Network, ] = Solver(nodes_by_activity_id=nodes_by_id).solve()
-        # networks: [Network, ] = Solver.solve(nodes_by_activity_id=self.network_data)
+        networks: [Network, ] = Solver.solve(nodes_by_activity_id=nodes_by_id)
 
         # gra = graph.GraphWidget()
         # gra.set_network(net[0])
         # gra.draw_graph(nn[0])
-        return graph.GraphMeneger(net = networks, size=(5000,5000), size_hint=(None, None))
+        return graph.GraphMeneger(net=networks, size=(5000,5000), size_hint=(None, None))
 
 CPMapp().run()
