@@ -7,6 +7,15 @@ from math import sin, cos, atan , pi, sqrt
 import cpm.solver as solver
 import cpm.network.network as networ
 
+'''
+1. Meneger -> Menager (za każdym razem googluje, bo nigdy nie pamiętam jak sie pisze xd)
++ 2. Fix tego (odpowiedź)
+? 3. Fix label
++ 4. Dodaj możliwość przełączania się pomiędzy networkami i ścieżkami krytycznymi - wystarczy jeden guzik next, żeby iść do kolejnej ścieżki / sieci
++ [5. Tło helpa tyci ciemniejsze]
+
+'''
+
 
 class InfoWitdget(Widget):
     visible:float = 0.
@@ -248,7 +257,7 @@ class ActionWidget(Widget):
 
         
 class GraphHelpWidget(Widget):
-    bacground_color = (.1, .1, .1, 0.9)
+    bacground_color = (.1, .1, .1, 0.95)
     pos_of_bottom_help = (300,150)
     pos_of_upper_help = (50,320)
 
@@ -360,10 +369,10 @@ class GraphWidget(EffectWidget):
         y_pos = self.y_distance
         
         def is_on_critical_path(node_id:str, critical_paths:list)->bool:
-            for path in critical_paths:
-                for path_node_id in path:
-                    if path_node_id == node_id:
-                        return True
+            for path in critical_paths[0]:
+                # for path_node_id in path:
+                if path == node_id:
+                    return True
             return False
         
         def draw_node(node:networ.NetworkNode, x_pos, y_pos):
@@ -372,9 +381,16 @@ class GraphWidget(EffectWidget):
             for tmp in node.next_network_nodes:
                 draw_node(tmp, x_pos + self.x_distance, y_pos)
                 y_pos += self.y_distance
-            
+                changed = True
+                while changed:
+                    changed = False
+                    for ew in event_widgets:
+                        if x_pos == event_widgets[ew].pos[0] and y_pos == event_widgets[ew].pos[1]:
+                            y_pos += self.y_distance
+                            changed = True
+                        
             event_widgets[node.id_] = EventWidget(name=node.id_,
-                                                  pos=(x_pos, y_pos - self.y_distance),
+                                                  pos=(x_pos, y_pos),
                                                   earliest_time=node.node.event.early_final,
                                                   latest_time=node.node.event.late_final,
                                                   reserve_time=node.node.event.possible_delay)
@@ -426,47 +442,103 @@ class GraphWidget(EffectWidget):
 
         return super().on_touch_down(touch)
     
+class ButttonActive(Button):
+    is_pressed = False
+    def __init__(self, active_color=(0.5,0.5,0.5), default_color=(105/100,105/100,105/100),  **kwargs):
+        super(Button, self).__init__(**kwargs)
+        self.active_color = active_color
+        self.default_color = default_color
+        self.background_color =  self.default_color
+
+    def on_press(self):
+        self.is_pressed = not self.is_pressed
+        if self.is_pressed:
+            self.background_color = self.active_color
+        else:
+            self.background_color = self.default_color
+    
+    def on_release(self):
+        if self.is_pressed:
+            self.background_color = self.active_color
+        else:
+            self.background_color = self.default_color
+
+    def get_state(self):
+        return self.is_pressed
+    
+    def set_state(self, is_pressed:bool):
+        self.is_pressed = is_pressed
+        if self.is_pressed == True:
+            self.background_color = self.active_color
+        else:
+            self.background_color = self.default_color
+
+    
+
 
 class GraphMeneger(EffectWidget):
-    is_help_page_enabled = False
-    is_move_enabled = False 
-
-    def __init__(self, net,  **kwargs):
+    def __init__(self, nets,  **kwargs):
         super(GraphMeneger, self).__init__(**kwargs)
-#  
-        self.help_page = GraphHelpWidget()
+        self.networks = nets
+        self.network_id = 0
 
+        net =  self.networks[self.network_id] 
         self.graph_widget = GraphWidget(network=net, pos=(0,0)) #size=(100,100), size_hint=(None, None), pos=(300,100)
         self.add_widget(self.graph_widget)
 
+        self.help_page = GraphHelpWidget()
+
         '''------------- HELP BUTTON ------------'''
-        help_button = Button(text="Pomoc",size = (70,40), pos=(10,10),size_hint = (None,None))
-        help_button.bind(on_press = self.help_button_callback) # type: ignore
-        self.add_widget(help_button)
+        self.help_button = ButttonActive(text="Pomoc",
+                                         size = (70,40), 
+                                         pos = (10,10),
+                                         size_hint = (None,None))
+        self.help_button.bind(on_press = self.help_button_callback) # type: ignore
+        self.add_widget(self.help_button)
 
         '''------------- MOVE BUTTON ------------'''
-        move_button = Button(text="Move", size = (70,40), pos=(85,10), size_hint = (None,None))
-        move_button.bind(on_press = self.move_button_callback) # type: ignore
-        self.add_widget(move_button)
+        self.move_button = ButttonActive(text="Przesuń", 
+                             size = (70,40), 
+                             pos = (85,10), 
+                             size_hint = (None,None))
+        self.move_button.bind(on_press = self.move_button_callback) # type: ignore
+        self.add_widget(self.move_button)
 
+        '''------------- NEXT NETWORK BUTTON ------------'''
+        self.next_network_button = Button(text = "Następna sieć",
+                                          size = (120, 40),
+                                          pos = (160, 10),
+                                          size_hint = (None, None))
+        self.next_network_button.bind(on_press = self.next_network_callback)
+        self.add_widget(self.next_network_button)
+        
         # Pirnt net
         for node in net.network_node_by_activity_id:
             print(node)
             print(net.network_node_by_activity_id[node])
 
+    def next_network_callback(self, event):
+        self.network_id += 1
+        if self.network_id >= len(self.networks):
+            self.network_id = 0
+
+        if self.help_button.get_state():
+            self.remove_widget(self.help_page)
+        self.move_button.set_state(False)
+        self.help_button.set_state(False)
+
+        self.remove_widget(self.graph_widget)
+        self.graph_widget = GraphWidget(network=self.networks[self.network_id], pos=(0,0))
+        self.add_widget(self.graph_widget)
+
     def help_button_callback(self, event):
-        if self.is_help_page_enabled == True:
-            self.is_help_page_enabled = False
+        if self.help_button.get_state():
             self.remove_widget(self.help_page)
         else:
-            self.is_help_page_enabled = True
             self.add_widget(self.help_page)
 
-
     def move_button_callback(self, event):
-        if self.is_move_enabled:
-        # self.graph_widget.is_move_enabled = not self.graph_widget.is_move_enabled
-            self.is_move_enabled = False
+        if self.move_button.get_state():
+            self.graph_widget.is_move_enabled = False
         else:
-            self.is_move_enabled = True
-        self.graph_widget.is_move_enabled = self.is_move_enabled
+            self.graph_widget.is_move_enabled = True
