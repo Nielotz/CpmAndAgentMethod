@@ -107,7 +107,8 @@ class Network:
     def calculate_critical_paths(self) -> [[Hashable, ], ]:
         """ Calculate critical paths. """
 
-        is_critical: Callable[[NetworkNode], bool] = lambda network_node: not network_node.node.event.possible_delay
+        def is_critical(network_node: NetworkNode) -> bool:
+            return not network_node.node.event.possible_delay and "apparent" not in network_node.id_
 
         critical_paths: [[Hashable, ], ] = []
 

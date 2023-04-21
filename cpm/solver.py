@@ -1,5 +1,5 @@
 import copy
-from typing import Hashable, Self
+from typing import Hashable
 
 from kivy.logger import Logger
 
@@ -64,8 +64,8 @@ class Solver:
         final_time = max(early_finals, key=lambda elem: elem[0])[0]
         last_nodes: [NetworkNode] = [node_ for early_final, node_ in early_finals if early_final == final_time]
 
+        """ Create all possible networks. """
         possible_networks: [Network] = []
-
         for last_node in last_nodes:
             last_node: NetworkNode
 
@@ -81,20 +81,23 @@ class Solver:
 
             network_.tail = finish_node_
 
-            orphans_: [NetworkNode, ] = orphans[:]
-            orphans_.remove(last_node)
-            for orphan in orphans_:
-                # Add apparent task that connects orphans to the last_node.
+            """ Create all possible critical paths. """
+            for orphan in orphans:
+                if orphan is last_node:
+                    continue
+
+                """ Add apparent task that connects orphans to the last_node. """
+                # Get right orphan.
                 orphan_: NetworkNode = network_.network_node_by_activity_id[orphan.id_]
 
                 # Connect orphan to last_node.
-                apparent_network_node: NetworkNode = NetworkNode(next_network_nodes=[last_node_],
-                                                               prev_network_nodes=[orphan_],
-                                                               node=ApparentNode(
-                                                               activity_name=f"apparent_{orphan_.id_}->{last_node_.id_}",
-                                                               event=last_node_.node.event))
-                last_node_.prev_network_nodes.append(apparent_network_node)
-                orphan_.next_network_nodes.append(apparent_network_node)
+                apparent_connection = NetworkNode(next_network_nodes=[last_node_],
+                                                  prev_network_nodes=[orphan_],
+                                                  node=ApparentNode(
+                                                      activity_name=f"apparent_{orphan_.id_}->{last_node_.id_}",
+                                                      event=last_node_.node.event))
+                last_node_.prev_network_nodes.append(apparent_connection)
+                orphan_.next_network_nodes.append(apparent_connection)
 
         return possible_networks
 
@@ -175,4 +178,4 @@ class Solver:
 
     # def __repr__(self):
     #     return f"Network:\n\tNodes: \n\t\t" + '\n\t\t'.join([str(node) for node in self._nodes_by_activity_id.values()])
-        # f"\t Critical path:" + "\t\t".join([str(cp) for cp in self.critical_paths])
+    # f"\t Critical path:" + "\t\t".join([str(cp) for cp in self.critical_paths])
