@@ -129,7 +129,7 @@ class TableScreen(Screen):
 
         headers = ["Action", "Preceding action", "Duration"]
         for header in headers:
-            label = Label(text=header, size_hint_x=None, width=200)
+            label = Label(text=header, size_hint_x=None, width=200, color=(0,0,0,1))
             self.table_grid.add_widget(label)
 
         for i in range(self.table_rows):
