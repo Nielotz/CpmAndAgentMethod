@@ -127,7 +127,7 @@ class TableScreen(Screen):
         self.table_grid = GridLayout(cols=3, size_hint=(1, None), row_default_height=40, spacing=2)
         self.table_grid.bind(minimum_height=self.table_grid.setter('height'))
 
-        headers = ["Czynność", "Czynność poprzedzająca", "czas trwania"]
+        headers = ["Action", "Preceding action", "Duration"]
         for header in headers:
             label = Label(text=header, size_hint_x=None, width=200)
             self.table_grid.add_widget(label)

@@ -1,7 +1,6 @@
-from typing import Hashable, List, Dict
+from typing import Hashable
 
 from kivy.app import App
-from kivy.clock import Clock
 from kivy.core.window import Window
 
 import data_input
@@ -43,20 +42,9 @@ class CPMapp(App):
         # nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/131 - multiple possible networks (3).txt")
         # nodes_by_id: {Hashable, Node} = self.load_data_from_user(path="cpm/test_data/124 - 2 possible networks and 2 critical paths per network.txt")
 
-        #self.column_1_data = ["1-2;"]
-        #self.column_2_data = [""]
-        #self.column_3_data = [1.]
-
-        #Clock.schedule_interval(self.update_table_data,3)
-
-
         #nodes_by_id: {Hashable, Node} = self.load_data_from_lists(self.column_1_data,self.column_2_data,self.column_3_data)
 
         #networks: [Network, ] = Solver.solve(nodes_by_activity_id=nodes_by_id)
-
-        # gra = graph.GraphWidget()
-        # gra.set_network(net[0])
-        # gra.draw_graph(nn[0])
 
         return sm
 
