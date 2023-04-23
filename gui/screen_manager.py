@@ -59,8 +59,10 @@ class CpmHomeScreen(Screen):
         box.add_widget(buttons_box)
         self.add_widget(box)
 
+        # create button for backing to previous screen
         back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None),size=(15,15))
         back_arrow.bind(on_press=self.go_back_arrow)
+
         # add an information label to display messages
         info_label = Label(text='Choose form of data input', size_hint=(1, None), pos_hint={'top': 1}, height=100, color=(0,0,0,1), font_size=30)
         self.add_widget(info_label)
@@ -84,6 +86,7 @@ class CpmHomeScreen(Screen):
         # create a filechooser widget
         filechooser = FileChooserListView()
         filechooser.path = os.getcwd()  # set the initial path to the current directory
+        filechooser.filters = ['*.txt']  # only show .txt files
 
         # add the title bar and filechooser widget to a container layout
         container = BoxLayout(orientation='vertical')
@@ -167,7 +170,6 @@ class TableScreen(Screen):
         # add the widgets to the screen
         self.box.add_widget(scroll_view)
         self.box.add_widget(buttons_box)
-        #self.box.add_widget(back_button)
         self.add_widget(back_arrow)
         self.add_widget(self.box)
 
