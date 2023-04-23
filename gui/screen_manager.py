@@ -108,9 +108,6 @@ class TableScreen(Screen):
                              pos_hint={'right': 1, 'y': 0})
         back_button.bind(on_press=self.go_to_home_screen)
 
-        '''graph_button = Button(text='Show Graph', size_hint=(None, None), size=(150, 50),
-                        pos_hint={'right': 1, 'y': 0})
-        graph_button.bind(on_press=self.go_to_graph)'''
         # create a horizontal box layout for the buttons
         buttons_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, spacing=10)
         buttons_box.add_widget(add_row_button)
@@ -125,7 +122,6 @@ class TableScreen(Screen):
         self.box.add_widget(scroll_view)
         self.box.add_widget(buttons_box)
         self.box.add_widget(back_button)
-        #box.add_widget(graph_button)
         self.add_widget(self.box)
 
     def add_row(self, *args):
@@ -151,35 +147,6 @@ class TableScreen(Screen):
             row_values = [cell.text for cell in self.table[i]]
             table_data.append(row_values)
 
-            # check if the edited row is complete
-            '''if any(cell.focus for cell in self.table[i]):
-                if not all(row_values):
-                    # create a pop-up window with the message
-                    content = Label(text="All fields need to be filled")
-                    popup = Popup(title="Incomplete Row", content=content, size_hint=(None, None), size=(400, 200))
-                    # add red outline to the unfilled cells
-                    for cell in self.table[i]:
-                        if not cell.text:
-                            cell.background_color = (1, 0, 0, 0.5)
-                        else:
-                            if cell == self.table[i][0] and not cell.text.isalpha():
-                                # add red outline to the first column if it's not a letter
-                                cell.background_color = (1, 0, 0, 0.5)
-                    # open the pop-up window
-                    popup.open()
-                    return'''
-
-
-        # if all rows are complete and the first column is a letter, remove any previous pop-up window and red outlines
-        for widget in self.walk():
-            if isinstance(widget, Popup):
-                widget.dismiss()
-        for row in self.table:
-            for cell in row:
-                cell.background_color = (1, 1, 1, 1)
-
-
-
         column_1_data = [row[0] for row in table_data]
         column_2_data = [row[1] for row in table_data]
         column_3_data = []
@@ -192,19 +159,12 @@ class TableScreen(Screen):
         print(column_1_data,column_2_data,column_3_data)
         self.table_data=table_data
 
-        graph_button = Button(text='Show Graph', size_hint=(None, None), size=(150, 50),
-                              pos_hint={'right': 1, 'y': 0})
-        graph_button.bind(on_press=self.go_to_graph)
-        self.box.add_widget(graph_button)
-
         graph_screen = GraphScreen(column_1_data,column_2_data,column_3_data,name='graph')
-
 
         screen_manager = self.parent
         screen_manager.add_widget(graph_screen)
         screen_manager.current = 'graph'
 
-        #MyScreenManager.add_widget(GraphScreen(name='graph'))
 
     def get_table_data(self):
         return self.table_data
