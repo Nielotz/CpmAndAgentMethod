@@ -255,7 +255,7 @@ class GraphScreen(Screen):
 
         networks: [Network, ] = Solver.solve(nodes_by_activity_id=nodes_by_id)
 
-        graph_manager = graph.GraphMeneger(net=networks[0], size=(5000, 5000), size_hint=(None, None))
+        graph_manager = graph.GraphManager(nets=networks, size=(5000, 5000), size_hint=(None, None))
         self.add_widget(graph_manager)
         self.add_widget(button)
 
