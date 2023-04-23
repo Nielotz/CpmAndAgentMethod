@@ -477,7 +477,7 @@ class TableWidget(Widget):
             Color(*self.bacground_color)
             Rectangle(size=(800., 500.),pos=(0,100))
             
-        output_table = OutputTable(headers=("ID", "Poprzednik", "Czas trwania", "ES", "EF", "LS", "LF", "Opóżnienie", "Krytyczne"),size=(800., 500.),pos=(0,100))
+        output_table = OutputTable(headers=("ID", "Predecessor", "Duration", "ES", "EF", "LS", "LF", "Delay", "Critical"),size=(800., 500.),pos=(0,100))
         for id_, node in net.network_node_by_activity_id.items():
             values = *node.node.asdict().values(),  node.id_ in net.critical_paths[0]
             values = tuple(map(lambda val: ", ".join(val) if isinstance(val, (list, tuple)) else str(val), values))
@@ -486,9 +486,9 @@ class TableWidget(Widget):
         self.add_widget(output_table)
 
 
-class GraphMenager(EffectWidget):
+class GraphManager(EffectWidget):
     def __init__(self, nets,  **kwargs):
-        super(GraphMenager, self).__init__(**kwargs)
+        super(GraphManager, self).__init__(**kwargs)
         self.networks = nets
         self.network_id = 0
 
