@@ -6,16 +6,9 @@ from kivy.uix.effectwidget import EffectWidget
 from math import sin, cos, atan , pi, sqrt
 import cpm.solver as solver
 import cpm.network.network as networ
-
-'''
-1. Meneger -> Menager (za każdym razem googluje, bo nigdy nie pamiętam jak sie pisze xd)
-+ 2. Fix tego (odpowiedź)
-? 3. Fix label
-+ 4. Dodaj możliwość przełączania się pomiędzy networkami i ścieżkami krytycznymi - wystarczy jeden guzik next, żeby iść do kolejnej ścieżki / sieci
-+ [5. Tło helpa tyci ciemniejsze]
-
-'''
-
+from gui.table import OutputTable
+from kivy.uix.layout import Layout
+from kivy.uix.scrollview import ScrollView
 
 class InfoWitdget(Widget):
     visible:float = 0.
@@ -196,6 +189,7 @@ class ActionWidget(Widget):
                 radius_change = radius / (self.dashed_lines * 2) - 1
                 
                 sth_radius = radius
+                tmp = sqrt(points[0]**2 + points[1]**2)
                 while sth_radius > 0:
                     sth_point = (sth_radius * cos(fi) + points[0],
                                  sth_radius * sin(fi) + points[1],
@@ -263,7 +257,7 @@ class GraphHelpWidget(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+    
         with self.canvas:
             Color(*self.bacground_color)
             Rectangle(size=(700., 500.), pos=(10,60))
@@ -281,16 +275,16 @@ class GraphHelpWidget(Widget):
         self.add_widget(self.upper_action_widget)
 
         offset = self.upper_event_widget_0.radius + 15
-        event_widget_0_label = Label(text="Zdarzenie 1", size_hint=(None, None))
+        event_widget_0_label = Label(text="Event 1", size_hint=(None, None))
         event_widget_0_label.size = (130,50)
         event_widget_0_label.pos = (self.upper_event_widget_0.center_of_circle[0] - event_widget_0_label.width / 2,
                             self.upper_event_widget_0.center_of_circle[1] + offset)
-        event_widget_1_label = Label(text="Zdarzenie 2", size_hint=(None, None))
+        event_widget_1_label = Label(text="Event 2", size_hint=(None, None))
         event_widget_1_label.size = (130,50)
         event_widget_1_label.pos = (self.upper_event_widget_1.center_of_circle[0] - event_widget_1_label.width / 2,
                             self.upper_event_widget_1.center_of_circle[1] + offset)
 
-        action_widget_label = Label(text="        Czynność:\nnazwa : czas trwania", size_hint=(None, None))
+        action_widget_label = Label(text="        Activity:\nname : duration time", size_hint=(None, None))
         action_widget_label.size = (130,50)
         action_widget_label.pos = ((self.upper_event_widget_0.center_of_circle[0] + self.upper_event_widget_1.center_of_circle[0]) / 2 - action_widget_label.width / 2,
                                    self.upper_event_widget_1.center_of_circle[1] + 20)
@@ -305,7 +299,7 @@ class GraphHelpWidget(Widget):
         self.help_event_widget = EventWidget(pos=self.pos_of_bottom_help)
         offset = self.help_event_widget.radius + 15
         
-        number_label = Label(text="numer zdarzenia", size_hint=(None, None))
+        number_label = Label(text="event number", size_hint=(None, None))
         number_label.size = (130,50)
         number_label.pos = (self.help_event_widget.center_of_circle[0] - number_label.width / 2,
                             self.help_event_widget.center_of_circle[1] + offset)
@@ -314,7 +308,7 @@ class GraphHelpWidget(Widget):
             Color(0, 1, 0, 0.25)
             Rectangle(pos=number_label.pos, size=number_label.size)
 
-        earliest_time_label = Label(text="najpóźniejszy możliwy\nmoment zaistnienia zdarzenia")
+        earliest_time_label = Label(text="latest possible time\nof occurrence the event") #najpóźniejszy możliwy\nmoment zaistnienia zdarzenia
         earliest_time_label.size = (220,50)
         earliest_time_label.pos = (self.help_event_widget.center_of_circle[0] + offset ,
                                    self.help_event_widget.center_of_circle[1] - earliest_time_label.height / 2)
@@ -330,7 +324,7 @@ class GraphHelpWidget(Widget):
             Color(0, 1, 0, 0.25)
             Rectangle(pos=latest_time_label.pos, size=latest_time_label.size)
 
-        reserve_time_label = Label(text="najwcześniejszy możliwy\nmoment zaistnienia zdarzenia")
+        reserve_time_label = Label(text="earliest possible time\nof occurrence the event")
         reserve_time_label.size = (220,50)
         reserve_time_label.pos = (self.help_event_widget.center_of_circle[0] - offset - reserve_time_label.width ,
                                    self.help_event_widget.center_of_circle[1] - reserve_time_label.height / 2)
@@ -354,27 +348,27 @@ class GraphWidget(EffectWidget):
     def __init__(self, network: solver.Solver, **kwargs):
         super(GraphWidget, self).__init__(**kwargs)
         self.network = network
-        #self.effects = [FXAAEffect()]
-        
+        print("Critical path:")
+        print(network.critical_paths[0])
         self.old_touch_pos = [0,0]
         self.draw_graph(self.network)
     
     def draw_graph(self, network: networ.Network):
         event_widgets = dict()
         action_widgets = dict()
-
         network.head.node.event
 
         x_pos = 0
         y_pos = self.y_distance
-        
+
+        """Check is on critical path"""
         def is_on_critical_path(node_id:str, critical_paths:list)->bool:
             for path in critical_paths[0]:
-                # for path_node_id in path:
                 if path == node_id:
                     return True
             return False
         
+        """Generate all nodes"""
         def draw_node(node:networ.NetworkNode, x_pos, y_pos):
             if node.id_ == 'FINISH' or not node.id_.find('apparent_'):
                 return
@@ -388,7 +382,8 @@ class GraphWidget(EffectWidget):
                         if x_pos == event_widgets[ew].pos[0] and y_pos == event_widgets[ew].pos[1]:
                             y_pos += self.y_distance
                             changed = True
-                        
+            if node.next_network_nodes[0].id_ is 'FINISH':
+                x_pos += self.x_distance
             event_widgets[node.id_] = EventWidget(name=node.id_,
                                                   pos=(x_pos, y_pos),
                                                   earliest_time=node.node.event.early_final,
@@ -396,7 +391,7 @@ class GraphWidget(EffectWidget):
                                                   reserve_time=node.node.event.possible_delay)
         draw_node(network.head,x_pos,y_pos)
 
-        # Genereate arrows
+        """Generate arrows between nodes"""
         for activity_key in network.network_node_by_activity_id:
             activity:network.NetworkNode = network.network_node_by_activity_id[activity_key]
             prev_nodes = activity.prev_network_nodes
@@ -405,22 +400,21 @@ class GraphWidget(EffectWidget):
                     action_widgets[node.id_] = ActionWidget(action_name=node.id_,
                                                             event_widget_0=event_widgets[node.prev_network_nodes[0].id_],
                                                             event_widget_1=event_widgets[activity.id_],
-                                                            action_time=activity.node.activity.duration,
+                                                            action_time=node.node.activity.duration,
                                                             is_real=False,
-                                                            is_critical=is_on_critical_path(activity.id_, network.critical_paths)
-                                                            )
+                                                            is_critical=is_on_critical_path(node.id_, network.critical_paths))
                     continue
                 if not activity.id_ in action_widgets and str(node.id_).find("apparent_") and activity.id_ in event_widgets:
                     action_widgets[activity.id_] = ActionWidget(action_name=activity.id_,
                                                             event_widget_0=event_widgets[node.id_],
                                                             event_widget_1=event_widgets[activity.id_],
                                                             action_time=activity.node.activity.duration,
-                                                            is_critical=is_on_critical_path(activity.id_, network.critical_paths)
-                                                            )
-
+                                                            is_critical=is_on_critical_path(activity.id_, network.critical_paths))
+        """Add generated nodes to widget"""
         for node in event_widgets:
             self.add_widget(event_widgets[node])    
 
+        """Add generated arrows to widget"""
         for action in action_widgets:
             self.add_widget(action_widgets[action])
       
@@ -441,6 +435,8 @@ class GraphWidget(EffectWidget):
         print("mouse down", touch)
 
         return super().on_touch_down(touch)
+
+ 
     
 class ButttonActive(Button):
     is_pressed = False
@@ -473,23 +469,38 @@ class ButttonActive(Button):
         else:
             self.background_color = self.default_color
 
-    
+class TableWidget(Widget):
+    bacground_color = (.1, .1, .1, 0.95)
+    def __init__(self, net, **kwargs):
+        super().__init__(**kwargs)
+        with self.canvas:
+            Color(*self.bacground_color)
+            Rectangle(size=(800., 500.),pos=(0,100))
+            
+        output_table = OutputTable(headers=("ID", "Poprzednik", "Czas trwania", "ES", "EF", "LS", "LF", "Opóżnienie", "Krytyczne"),size=(800., 500.),pos=(0,100))
+        for id_, node in net.network_node_by_activity_id.items():
+            values = *node.node.asdict().values(),  node.id_ in net.critical_paths[0]
+            values = tuple(map(lambda val: ", ".join(val) if isinstance(val, (list, tuple)) else str(val), values))
+            output_table.add_values(values)
+
+        self.add_widget(output_table)
 
 
-class GraphMeneger(EffectWidget):
+class GraphMenager(EffectWidget):
     def __init__(self, nets,  **kwargs):
-        super(GraphMeneger, self).__init__(**kwargs)
+        super(GraphMenager, self).__init__(**kwargs)
         self.networks = nets
         self.network_id = 0
 
-        net =  self.networks[self.network_id] 
-        self.graph_widget = GraphWidget(network=net, pos=(0,0)) #size=(100,100), size_hint=(None, None), pos=(300,100)
+        self.net =  self.networks[self.network_id] 
+        self.graph_widget = GraphWidget(network=self.net, pos=(0,0))
         self.add_widget(self.graph_widget)
 
         self.help_page = GraphHelpWidget()
+        self.table_page = TableWidget(self.net)
 
         '''------------- HELP BUTTON ------------'''
-        self.help_button = ButttonActive(text="Pomoc",
+        self.help_button = ButttonActive(text="Help",
                                          size = (70,40), 
                                          pos = (10,10),
                                          size_hint = (None,None))
@@ -497,7 +508,7 @@ class GraphMeneger(EffectWidget):
         self.add_widget(self.help_button)
 
         '''------------- MOVE BUTTON ------------'''
-        self.move_button = ButttonActive(text="Przesuń", 
+        self.move_button = ButttonActive(text="Move", 
                              size = (70,40), 
                              pos = (85,10), 
                              size_hint = (None,None))
@@ -505,17 +516,25 @@ class GraphMeneger(EffectWidget):
         self.add_widget(self.move_button)
 
         '''------------- NEXT NETWORK BUTTON ------------'''
-        self.next_network_button = Button(text = "Następna sieć",
+        self.next_network_button = Button(text = "Next network",
                                           size = (120, 40),
                                           pos = (160, 10),
                                           size_hint = (None, None))
         self.next_network_button.bind(on_press = self.next_network_callback)
         self.add_widget(self.next_network_button)
         
+        '''------------- TABLE BUTTON ------------'''
+        self.table_button = ButttonActive(text = "Show table",
+                                          size = (120, 40),
+                                          pos = (285, 10),
+                                          size_hint = (None, None))
+        self.table_button.bind(on_press = self.table_button_callback)
+        self.add_widget(self.table_button)
+
         # Pirnt net
-        for node in net.network_node_by_activity_id:
+        for node in self.net.network_node_by_activity_id:
             print(node)
-            print(net.network_node_by_activity_id[node])
+            print(self.net.network_node_by_activity_id[node])
 
     def next_network_callback(self, event):
         self.network_id += 1
@@ -526,6 +545,10 @@ class GraphMeneger(EffectWidget):
             self.remove_widget(self.help_page)
         self.move_button.set_state(False)
         self.help_button.set_state(False)
+
+        if self.table_button.get_state():
+            self.remove_widget(self.table_page)
+        self.table_page = TableWidget(self.networks[self.network_id])
 
         self.remove_widget(self.graph_widget)
         self.graph_widget = GraphWidget(network=self.networks[self.network_id], pos=(0,0))
@@ -542,3 +565,9 @@ class GraphMeneger(EffectWidget):
             self.graph_widget.is_move_enabled = False
         else:
             self.graph_widget.is_move_enabled = True
+
+    def table_button_callback(self, event):
+        if self.table_button.get_state():
+            self.remove_widget(self.table_page)
+        else:
+            self.add_widget(self.table_page)
