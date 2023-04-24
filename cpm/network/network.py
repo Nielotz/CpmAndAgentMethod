@@ -1,4 +1,4 @@
-from typing import Self, Hashable, Callable
+from typing import Self, Hashable
 
 from cpm.node import Node, StartNode
 
@@ -71,7 +71,8 @@ class Network:
                     prev_network_node.next_network_nodes.append(curr_network_node)
                     self.network_node_by_activity_id[node_id] = curr_network_node
 
-    def _sorted(self, nodes: {Hashable: Node}) -> {Hashable: Node}:
+    @staticmethod
+    def _sorted(nodes: {Hashable: Node}) -> {Hashable: Node}:
         """ Sorts nodes chronologically.
 
             Example:
