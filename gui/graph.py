@@ -197,11 +197,11 @@ class ActionWidget(Widget):
                     sth_radius -= radius_change * 2
 
             # Draw Arrow
-            arrowhead_legth: float = 20
+            arrowhead_length: float = 20
             arrowhead_angle: float = pi / 6
-            arrow_vec = (arrowhead_legth,
+            arrow_vec = (arrowhead_length,
                          0,
-                         arrowhead_legth,
+                         arrowhead_length,
                          0)
 
             arrow_vec = (
@@ -248,7 +248,7 @@ class ActionWidget(Widget):
 
 
 class GraphHelpWidget(Widget):
-    bacground_color = (.1, .1, .1, 0.95)
+    background_color = (.1, .1, .1, 0.95)
     pos_of_bottom_help = (300, 150)
     pos_of_upper_help = (50, 320)
 
@@ -256,7 +256,7 @@ class GraphHelpWidget(Widget):
         super().__init__(**kwargs)
 
         with self.canvas:
-            Color(*self.bacground_color)
+            Color(*self.background_color)
             Rectangle(size=(700., 500.), pos=(10, 60))
 
         # Draw upper of help page
@@ -441,7 +441,7 @@ class GraphWidget(EffectWidget):
         return super().on_touch_down(touch)
 
 
-class ButttonActive(Button):
+class ButtonActive(Button):
     is_pressed = False
 
     def __init__(self, active_color=(0.5, 0.5, 0.5), default_color=(105 / 100, 105 / 100, 105 / 100), **kwargs):
@@ -475,12 +475,12 @@ class ButttonActive(Button):
 
 
 class TableWidget(Widget):
-    bacground_color = (.1, .1, .1, 0.95)
+    background_color = (.1, .1, .1, 0.95)
 
     def __init__(self, net, **kwargs):
         super().__init__(**kwargs)
         with self.canvas:
-            Color(*self.bacground_color)
+            Color(*self.background_color)
             Rectangle(size=(800., 500.), pos=(0, 100))
 
         output_table = OutputTable(
@@ -508,18 +508,18 @@ class GraphManager(EffectWidget):
         self.table_page = TableWidget(self.net)
 
         '''------------- HELP BUTTON ------------'''
-        self.help_button = ButttonActive(text="Help",
-                                         size=(70, 40),
-                                         pos=(10, 10),
-                                         size_hint=(None, None))
+        self.help_button = ButtonActive(text="Help",
+                                        size=(70, 40),
+                                        pos=(10, 10),
+                                        size_hint=(None, None))
         self.help_button.bind(on_press=self.help_button_callback)  # type: ignore
         self.add_widget(self.help_button)
 
         '''------------- MOVE BUTTON ------------'''
-        self.move_button = ButttonActive(text="Move",
-                                         size=(70, 40),
-                                         pos=(85, 10),
-                                         size_hint=(None, None))
+        self.move_button = ButtonActive(text="Move",
+                                        size=(70, 40),
+                                        pos=(85, 10),
+                                        size_hint=(None, None))
         self.move_button.bind(on_press=self.move_button_callback)  # type: ignore
         self.add_widget(self.move_button)
 
@@ -532,14 +532,14 @@ class GraphManager(EffectWidget):
         self.add_widget(self.next_network_button)
 
         '''------------- TABLE BUTTON ------------'''
-        self.table_button = ButttonActive(text="Show table",
-                                          size=(120, 40),
-                                          pos=(285, 10),
-                                          size_hint=(None, None))
+        self.table_button = ButtonActive(text="Show table",
+                                         size=(120, 40),
+                                         pos=(285, 10),
+                                         size_hint=(None, None))
         self.table_button.bind(on_press=self.table_button_callback)
         self.add_widget(self.table_button)
 
-        # Pirnt net
+        # Print net
         for node in self.net.network_node_by_activity_id:
             print(node)
             print(self.net.network_node_by_activity_id[node])
