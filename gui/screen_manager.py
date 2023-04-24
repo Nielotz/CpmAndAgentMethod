@@ -229,12 +229,12 @@ class TableScreen(Screen):
                 # Turn the fields red
                 for i in range(len(self.table)):
                     if self.table[i][0].text == '':
-                        self.table[i][0].background_color = get_color_from_hex('#FF0000')  # red
+                        self.table[i][0].background_color = get_color_from_hex('#d3212d')  # amaranth red
                     if self.table[i][2].text == '':
-                        self.table[i][2].background_color = get_color_from_hex('#FF0000')  # red
+                        self.table[i][2].background_color = get_color_from_hex('#d3212d')  # amaranth red
 
                 # Show the pop-up message
-                popup_message = 'Please fill in the first and third columns.'
+                popup_message = 'Please fill correct data in the first and third columns.'
                 popup = Popup(title='Error', content=Label(text=popup_message), size_hint=(None, None), size=(400, 400))
                 popup.open()
             else:
