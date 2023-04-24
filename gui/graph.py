@@ -442,13 +442,14 @@ class GraphWidget(EffectWidget):
 
 
 class ButtonActive(Button):
-    is_pressed = False
-
-    def __init__(self, active_color=(0.5, 0.5, 0.5), default_color=(105 / 100, 105 / 100, 105 / 100), **kwargs):
+    def __init__(self, is_pressed = False, active_color=(0.5, 0.5, 0.5), default_color=(105 / 100, 105 / 100, 105 / 100), **kwargs):
         super(Button, self).__init__(**kwargs)
         self.active_color = active_color
         self.default_color = default_color
         self.background_color = self.default_color
+        self.is_pressed = is_pressed
+        if self.is_pressed:
+            self.background_color = self.active_color
 
     def on_press(self):
         self.is_pressed = not self.is_pressed
@@ -517,10 +518,12 @@ class GraphManager(EffectWidget):
 
         '''------------- MOVE BUTTON ------------'''
         self.move_button = ButtonActive(text="Move",
+                                        is_pressed=True,
                                         size=(70, 40),
                                         pos=(85, 10),
                                         size_hint=(None, None))
         self.move_button.bind(on_press=self.move_button_callback)  # type: ignore
+        self.graph_widget.is_move_enabled = True
         self.add_widget(self.move_button)
 
         '''------------- NEXT NETWORK BUTTON ------------'''
