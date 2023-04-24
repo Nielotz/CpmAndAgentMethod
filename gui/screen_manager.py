@@ -10,6 +10,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
+from kivy.utils import get_color_from_hex
 
 import data_input
 import gui.graph as graph
@@ -104,14 +105,24 @@ class CpmHomeScreen(Screen):
 
         # create a callback function to handle the file selection
         def on_selection(instance_, selected_file):
-            # do something with the selected file
-            print(selected_file[0])
-            popup.dismiss()
-            graph_screen = GraphScreen(None, None, None, selected_file[0], name='graph')
+            try:
+                # check if the file format is supported
+                if not selected_file[0].endswith('.txt'):
+                    raise Exception('File format not supported')
 
-            screen_manager = self.parent
-            screen_manager.add_widget(graph_screen)
-            screen_manager.current = 'graph'
+                # create object of graph_screen giving him selected file
+                print(selected_file[0])
+                popup.dismiss()
+                graph_screen = GraphScreen(None, None, None, selected_file[0], name='graph')
+
+                screen_manager = self.parent
+                screen_manager.add_widget(graph_screen)
+                screen_manager.current = 'graph'
+            except Exception as e:
+                # display an error message to the user
+                error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
+                                    size_hint=(0.8, 0.3), auto_dismiss=True)
+                error_popup.open()
 
         # bind the selection callback to the filechooser widget
         filechooser.bind(selection=on_selection)
@@ -199,27 +210,50 @@ class TableScreen(Screen):
             self.table_rows -= 1
 
     def submit(self, instance):
-        table_data = []
-        for i in range(0, self.table_rows):
-            row_values = [cell.text for cell in self.table[i]]
-            table_data.append(row_values)
+        try:
+            table_data = []
+            for i in range(0, self.table_rows):
+                row_values = [cell.text for cell in self.table[i]]
+                table_data.append(row_values)
 
-        column_1_data = [row[0] for row in table_data]
-        column_2_data = [row[1] for row in table_data]
-        column_3_data = []
-        for row in table_data:
-            try:
-                column_3_data.append(float(row[2]))
-            except ValueError:
-                column_3_data.append(0.0)
+            column_1_data = [row[0] for row in table_data]
+            column_2_data = [row[1] for row in table_data]
+            column_3_data = []
+            for row in table_data:
+                try:
+                    column_3_data.append(float(row[2]))
+                except ValueError:
+                    column_3_data.append(0.0)
 
-        print(column_1_data, column_2_data, column_3_data)
-        self.table_data = table_data
-        graph_screen = GraphScreen(column_1_data, column_2_data, column_3_data, name='graph')
+            if '' in column_1_data or 0.0 in column_3_data:
+                # Turn the fields red
+                for i in range(len(self.table)):
+                    if self.table[i][0].text == '':
+                        self.table[i][0].background_color = get_color_from_hex('#FF0000')  # red
+                    if self.table[i][2].text == '':
+                        self.table[i][2].background_color = get_color_from_hex('#FF0000')  # red
 
-        screen_manager = self.parent
-        screen_manager.add_widget(graph_screen)
-        screen_manager.current = 'graph'
+                # Show the pop-up message
+                popup_message = 'Please fill in the first and third columns.'
+                popup = Popup(title='Error', content=Label(text=popup_message), size_hint=(None, None), size=(400, 400))
+                popup.open()
+            else:
+                # Reset the fields' background color
+                for i in range(len(self.table)):
+                    self.table[i][0].background_color = (1, 1, 1, 1)  # white
+                    self.table[i][2].background_color = (1, 1, 1, 1)  # white
+                print(column_1_data, column_2_data, column_3_data)
+                self.table_data = table_data
+                graph_screen = GraphScreen(column_1_data, column_2_data, column_3_data, name='graph')
+
+                screen_manager = self.parent
+                screen_manager.add_widget(graph_screen)
+                screen_manager.current = 'graph'
+        except Exception as e:
+            # display an error message to the user
+            error_popup = Popup(title='Error', content=Label(text='Graph cannot be made from this data'),
+                                size_hint=(0.8, 0.3), auto_dismiss=True)
+            error_popup.open()
 
     def get_table_data(self):
         return self.table_data
