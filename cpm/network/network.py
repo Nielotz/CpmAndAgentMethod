@@ -1,4 +1,4 @@
-from typing import Self, Hashable, Callable
+from typing import Self, Hashable
 
 from cpm.node import Node, StartNode
 
