@@ -127,8 +127,8 @@ class Solver:
                 node.event.late_start = node.event.late_final - node.activity.duration
                 node.event.possible_delay = node.event.late_start - node.event.early_start
 
-            for prev_node in start_node.prev_network_nodes:
-                fill_ls_lf_and_delay_req(prev_node)
+            for prev_node_ in start_node.prev_network_nodes:
+                fill_ls_lf_and_delay_req(prev_node_)
 
         # Fill final node values.
         last_event = tail.node.event

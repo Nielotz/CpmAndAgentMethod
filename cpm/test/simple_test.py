@@ -3,9 +3,9 @@ from typing import Hashable
 import pytest
 
 import cpm.test.data_loader
-from cpm.network.network import Network, NetworkNode
-from cpm.solver import Solver
+from cpm.network.network import Network
 from cpm.node import Node
+from cpm.solver import Solver
 
 
 def runner(path: str):
