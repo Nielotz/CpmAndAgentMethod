@@ -26,14 +26,20 @@ class MyScreenManager(ScreenManager):
         self.add_widget(HomeScreen(name='home'))
         self.add_widget(TableScreen(name='table'))
         self.add_widget(CpmHomeScreen(name='cpmHome'))
+        self.add_widget(AgentHomeScreen(name='agentHome'))
 
 
 class HomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        button = Button(text='CPM method', size_hint=(.2, .1), pos_hint={'center_x': .5, 'center_y': .5})
-        button.bind(on_press=self.go_to_cpm_home_screen)
-        self.add_widget(button)
+        box = BoxLayout(orientation='horizontal', padding=10, spacing=10)
+        cpmButton = Button(text='CPM method', size_hint=(.2, .1), pos_hint={'center_x': .5, 'center_y': .5})
+        cpmButton.bind(on_press=self.go_to_cpm_home_screen)
+        agentButton = Button(text='Agent method', size_hint=(.2, .1), pos_hint={'center_x': .5, 'center_y': .5})
+        agentButton.bind(on_press=self.go_to_agent_home_screen)
+        box.add_widget(cpmButton)
+        box.add_widget(agentButton)
+        self.add_widget(box)
 
         # add an information label to display messages
         info_label = Label(text='Logistic Simulator', size_hint=(1, None), pos_hint={'top': 1}, height=100,
@@ -43,6 +49,8 @@ class HomeScreen(Screen):
 
     def go_to_cpm_home_screen(self, instance):
         self.manager.current = 'cpmHome'
+    def go_to_agent_home_screen(self, instance):
+        self.manager.current = 'agentHome'
 
 
 class CpmHomeScreen(Screen):
@@ -325,3 +333,34 @@ class GraphScreen(Screen):
     def go_back_to_home(self, instance):
         self.manager.current = 'cpmHome'
         self.manager.remove_widget(self)
+
+class AgentHomeScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # create a box layout for the screen
+        box = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        input_data_button = Button(text='Input Data to table', size_hint=(.3, None), pos_hint={'left': 1, 'y': 0})
+        read_data_button = Button(text='Input Data from file', size_hint=(.3, None), pos_hint={'left': 1, 'y': 0})
+
+        # create a horizontal box layout for the buttons
+        buttons_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, spacing=10)
+        buttons_box.add_widget(input_data_button)
+        buttons_box.add_widget(read_data_button)
+        box.add_widget(buttons_box)
+        self.add_widget(box)
+
+        # create button for backing to previous screen
+        back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
+        back_arrow.bind(on_press=self.go_back_arrow)
+
+        # add an information label to display messages
+        info_label = Label(text='Choose form of data input', size_hint=(1, None), pos_hint={'top': 1}, height=100,
+                           color=(0, 0, 0, 1), font_size=30)
+        self.add_widget(info_label)
+        self.ids.info_label = info_label
+        self.add_widget(back_arrow)
+
+
+    def go_back_arrow(self, instance):
+        self.manager.current = 'home'
