@@ -9,6 +9,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.utils import get_color_from_hex
 
@@ -418,21 +419,128 @@ class AgentManualInput(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # create instance variables for supply and demand
+        self.supply = 0
+        self.demand = 0
+        self.suppliers = 0
+        self.receivers = 0
+
         # create button for backing to previous screen
         back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
         back_arrow.bind(on_press=self.go_back_arrow)
 
         demand_supply_button = Button(text='set Supply/Demand')
+        demand_supply_button.bind(on_press=self.add_supply_demand)
+
         supplier_receiver_button = Button(text='add Supplier/Receiver')
+        supplier_receiver_button.bind(on_press=self.add_supplier_receiver)
+
         costs_table_button = Button(text='Costs table')
+
         bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5})
         bl.add_widget(demand_supply_button)
         bl.add_widget(supplier_receiver_button)
         bl.add_widget(costs_table_button)
 
-
         self.add_widget(back_arrow)
         self.add_widget(bl)
+
     def go_back_arrow(self, instance):
         self.manager.current = 'agentHome'
-    def go_supply_demand
+    def add_supply_demand(self, instance):
+        # create a popup window
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10,size_hint=(None, None), size=(300, 200))
+        input_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint=(None, None), size=(300, 50))
+
+        # create input fields
+        supply_label = Label(text='Supply:', size_hint=(0.3, None), height=30,pos_hint={'top': 1})
+        demand_label = Label(text='Demand:', size_hint=(0.3, None), height=30,pos_hint={'top': 1})
+        supply_input = TextInput(input_type='number', size_hint=(0.5, None), height=30, multiline=False,pos_hint={'top': 1})
+        demand_input = TextInput(input_type='number', size_hint=(0.5, None), height=30, multiline=False,pos_hint={'top': 1})
+
+        # pre-populate the input fields with the previous supply and demand values
+        supply_input.text = str(self.supply)
+        demand_input.text = str(self.demand)
+
+        # add the text inputs to the input layout
+        input_layout.add_widget(supply_label)
+        input_layout.add_widget(supply_input)
+        input_layout.add_widget(demand_label)
+        input_layout.add_widget(demand_input)
+
+        content.add_widget(input_layout)
+
+        # create a submit button to save the values
+        submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 50))
+        content.add_widget(submit_button)
+
+        # create the popup with the content and open it
+        popup = Popup(title='Set Supply/Demand', content=content, size_hint=(None, None), size=(400, 200), pos_hint={'top': 0.95})
+        submit_button.bind(on_press=lambda x: self.save_supply_demand(popup, supply_input, demand_input))
+        popup.open()
+    def save_supply_demand(self, popup, supply_input, demand_input):
+        try:
+            # retrieve the values from the text inputs and save them
+            self.supply = int(supply_input.text)
+            self.demand = int(demand_input.text)
+
+            # close the popup
+            popup.dismiss()
+
+            # do something with the supply and demand values
+            print(f'Supply: {self.supply}, Demand: {self.demand}')
+        except Exception as e:
+            # display an error message to the user
+            error_popup = Popup(title='ERROR', content=Label(text='inputed value must be an integer'),
+                                size_hint=(0.8, 0.3), auto_dismiss=True)
+            error_popup.open()
+
+    def add_supplier_receiver(self, instance):
+        # create a popup window
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10, size_hint=(None, None), size=(300, 200))
+        spinner_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint=(None, None), size=(300, 50))
+
+        # create two vertical BoxLayouts for supplier and receiver labels and spinners
+        supplier_box = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.5, None), height=50)
+        receiver_box = BoxLayout(orientation='vertical', spacing=5, size_hint=(0.5, None), height=50)
+
+        supplier_label = Label(text='Suppliers:', size_hint=(1, None), height=30)
+        receiver_label = Label(text='Receivers:', size_hint=(1, None), height=30)
+
+        supplier_spinner = Spinner(values=('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'), size_hint=(1, None), height=30)
+        receiver_spinner = Spinner(values=('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'), size_hint=(1, None), height=30)
+
+        # pre-populate the spinners with the previous values
+        supplier_spinner.text = str(self.suppliers)
+        receiver_spinner.text = str(self.receivers)
+
+        supplier_box.add_widget(supplier_label)
+        supplier_box.add_widget(supplier_spinner)
+        receiver_box.add_widget(receiver_label)
+        receiver_box.add_widget(receiver_spinner)
+
+        spinner_layout.add_widget(supplier_box)
+        spinner_layout.add_widget(receiver_box)
+
+        content.add_widget(spinner_layout)
+
+        # create a submit button to save the values
+        submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 50))
+        content.add_widget(submit_button)
+
+        popup = Popup(title='Set Supplier/Receiver count', content=content, size_hint=(None, None), size=(400, 200), pos_hint={'top': 0.95})
+        # bind the buttons to actions
+        submit_button.bind(on_press=lambda x: self.save_suppliers_receivers(popup, supplier_spinner, receiver_spinner))
+        popup.open()
+
+    def save_suppliers_receivers(self, popup, supplier_spinner, receiver_spinner):
+        # retrieve the values from the text inputs and save them
+        self.suppliers = int(supplier_spinner.text)
+        self.receivers = int(receiver_spinner.text)
+
+        # close the popup
+        popup.dismiss()
+
+        # do something with the supply and demand values
+        print(f'Suppliers: {self.suppliers}, Receivers: {self.receivers}')
+
