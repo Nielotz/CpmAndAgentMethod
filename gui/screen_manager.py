@@ -27,6 +27,7 @@ class MyScreenManager(ScreenManager):
         self.add_widget(TableScreen(name='table'))
         self.add_widget(CpmHomeScreen(name='cpmHome'))
         self.add_widget(AgentHomeScreen(name='agentHome'))
+        self.add_widget(AgentManualInput(name='ami'))
 
 
 class HomeScreen(Screen):
@@ -51,7 +52,6 @@ class HomeScreen(Screen):
         self.manager.current = 'cpmHome'
     def go_to_agent_home_screen(self, instance):
         self.manager.current = 'agentHome'
-
 
 class CpmHomeScreen(Screen):
     def __init__(self, **kwargs):
@@ -137,7 +137,6 @@ class CpmHomeScreen(Screen):
 
         # open the popup
         popup.open()
-
 
 class TableScreen(Screen):
     def __init__(self, **kwargs):
@@ -272,7 +271,6 @@ class TableScreen(Screen):
     def go_to_graph(self, instance):
         self.manager.current = 'graph'
 
-
 class GraphScreen(Screen):
     def __init__(self,
                  col_1_data: Optional[list[str]], col_2_data: Optional[list[str]], col_3_data: Optional[list[float]],
@@ -340,8 +338,10 @@ class AgentHomeScreen(Screen):
 
         # create a box layout for the screen
         box = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        input_data_button = Button(text='Input Data to table', size_hint=(.3, None), pos_hint={'left': 1, 'y': 0})
+        input_data_button = Button(text='Input Data manually', size_hint=(.3, None), pos_hint={'left': 1, 'y': 0})
+        input_data_button.bind(on_press=self.go_to_manual_input)
         read_data_button = Button(text='Input Data from file', size_hint=(.3, None), pos_hint={'left': 1, 'y': 0})
+        read_data_button.bind(on_press=self.open_filechooser_popup)
 
         # create a horizontal box layout for the buttons
         buttons_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, spacing=10)
@@ -364,3 +364,75 @@ class AgentHomeScreen(Screen):
 
     def go_back_arrow(self, instance):
         self.manager.current = 'home'
+    def go_to_manual_input(self, instance):
+        self.manager.current = 'ami'
+    def open_filechooser_popup(self, instance):
+        # create a popup window
+        popup = Popup(title='Choose a file', size_hint=(0.9, 0.9), auto_dismiss=False)
+
+        # create a custom title bar with an "X" button
+        box = BoxLayout(size_hint=(1, None), height=50, spacing=10, pos_hint={'x': 0.97, 'y': 1})
+        close_button = Button(text='X', size_hint=(None, None), size=(10, 10), pos_hint={'x': 0, 'y': 1.4})
+        close_button.bind(on_press=popup.dismiss)
+        box.add_widget(close_button)
+
+        # create a filechooser widget
+        filechooser = FileChooserListView()
+        filechooser.path = os.getcwd()  # set the initial path to the current directory
+        filechooser.filters = ['*.txt']  # only show .txt files
+
+        # add the title bar and filechooser widget to a container layout
+        container = BoxLayout(orientation='vertical')
+        container.add_widget(box)
+        container.add_widget(filechooser)
+
+        # add the container layout as the content of the popup
+        popup.content = container
+
+        # create a callback function to handle the file selection
+        def on_selection(instance_, selected_file):
+            try:
+                # check if the file format is supported
+                if not selected_file[0].endswith('.txt'):
+                    raise Exception('File format not supported')
+
+                # TODO Do something with file
+                print(selected_file[0])
+                todo_popup = Popup(title='TODO', content=Label(text='Not Yet Working'),
+                                    size_hint=(0.8, 0.3), auto_dismiss=True)
+                todo_popup.open()
+                popup.dismiss()
+            except Exception as e:
+                # display an error message to the user
+                error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
+                                    size_hint=(0.8, 0.3), auto_dismiss=True)
+                error_popup.open()
+
+        # bind the selection callback to the filechooser widget
+        filechooser.bind(selection=on_selection)
+
+        # open the popup
+        popup.open()
+
+class AgentManualInput(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # create button for backing to previous screen
+        back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
+        back_arrow.bind(on_press=self.go_back_arrow)
+
+        demand_supply_button = Button(text='set Supply/Demand')
+        supplier_receiver_button = Button(text='add Supplier/Receiver')
+        costs_table_button = Button(text='Costs table')
+        bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        bl.add_widget(demand_supply_button)
+        bl.add_widget(supplier_receiver_button)
+        bl.add_widget(costs_table_button)
+
+
+        self.add_widget(back_arrow)
+        self.add_widget(bl)
+    def go_back_arrow(self, instance):
+        self.manager.current = 'agentHome'
+    def go_supply_demand
