@@ -3,14 +3,13 @@ from dataclasses import dataclass
 
 @dataclass
 class Trader:
-    id_: str
     capacity: int
     price: float
 
 @dataclass
 class Route:
     seller: Trader
-    buyers: Trader
+    buyer: Trader
     transport_cost: int
 
 @dataclass
