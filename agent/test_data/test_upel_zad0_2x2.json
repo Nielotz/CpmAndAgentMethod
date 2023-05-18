@@ -1,0 +1,26 @@
+{
+    "input": {
+      "sellers": {
+        "capacities": [45, 25],
+        "prices":     [6, 7]
+      },
+      "buyers": {
+        "capacities": [30, 30],
+        "prices":     [12, 13]
+      },
+      "routes costs": [[7, 4],
+                       [3, 5]]
+    },
+    "output": {
+      "total income": 690,
+      "porducts cost": 355,
+      "transport cost": 195,
+      "total cost": 550,
+      "total profit": 140,
+      "profit table": [[-1, 3],
+                       [2, 1]],
+      "optimal transport table": [[0, 30, 15],
+                                  [25, 0, 0],
+                                  [5, 0, 55]]
+    }
+  }
