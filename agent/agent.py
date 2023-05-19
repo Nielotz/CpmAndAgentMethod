@@ -5,6 +5,8 @@ from agent.supply_chain import SupplyChainData
 
 @dataclass
 class AgentData:
+    total_products_cost: float
+    total_transport_cost: float
     total_cost: float
     total_income: float
     total_profit: float
