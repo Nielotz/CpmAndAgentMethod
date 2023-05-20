@@ -17,13 +17,24 @@ from kivy.uix.screenmanager import ScreenManager, NoTransition, Screen
 # -> move labels
 # -> better colors
 
-class AgentData:
-    cost: float = 1111
-    income: float = 2222
-    profit: float = 223
-    profit_table: list[list[int]] = [[1,2,3],[4,5,6]]
-    optimal_transport_table: list[list[int]] = [[153,7,8],[9,0,1]]
+# class AgentData:
+#     cost: float = 1111
+#     income: float = 2222
+#     profit: float = 223
+#     profit_table: list[list[int]] = [[1,2,3],[4,5,6]]
+#     optimal_transport_table: list[list[int]] = [[153,7,8],[9,0,1]]
 
+
+class AgentData:
+    total_products_cost: float = 5552
+    total_transport_cost: float = 255
+    total_cost: float = 1111
+    total_income: float = 2222
+    total_profit: float = 223
+    # buyers: [str]  # Headers in tables.
+    # sellers: [str]  # Headers in tables.
+    profit_table: list[list[float, ]] = [[1,2,3],[4,5,6]]
+    optimal_transport_table: list[list[float, ]] = [[153,7,8],[9,0,1]]
 
 class ColorLabel(Label):
     def __init__(self, bacground_color=(1., 0., 1., 0.25), **kwargs):
@@ -49,8 +60,8 @@ class AgentWidget(Widget):
         self.draw_optimal_transport_table()
        
     def draw_summary(self):
-        summary_size = (270, 50)
-        summary_pos = ((Window.size[0] - summary_size[0]) / 2, Window.size[1] - 2 * summary_size[1])
+        summary_size = (320, 80)
+        summary_pos = ((Window.size[0] - summary_size[0]) / 2, Window.size[1] - 2 * summary_size[1]+50)
         summary_padding = 5
         label_size = (100,20)
         text_color = (.1, .1, .1)
@@ -62,7 +73,7 @@ class AgentWidget(Widget):
             Rectangle(size=summary_size, pos=summary_pos)
         
 
-        text='[b]Income: [color=#008000]' + str(self.agent_data.income) + '[/color][/b]'
+        text='[b]Income: [color=#008000]' + str(self.agent_data.total_income) + '[/color][/b]'
         income_label = Label(text=text, 
                              color=text_color,
                              size=label_size, 
@@ -70,11 +81,11 @@ class AgentWidget(Widget):
                              size_hint=(None, None),
                              font_size=font_size,
                              markup=True)
-        income_label.pos = (summary_padding, label_size[1] + summary_padding)
+        income_label.pos = (summary_padding, summary_size[1] - summary_padding - label_size[1])
         income_label.bind(texture_size=income_label.setter('size'))
 
 
-        text='[b]Cost: [color=#800000]' + str(self.agent_data.cost) + '[/color][/b]'
+        text='[b]Cost: [color=#800000]' + str(self.agent_data.total_cost) + '[/color][/b]'
         cost_label = Label(text=text, 
                              color=text_color,
                              size=label_size, 
@@ -82,27 +93,60 @@ class AgentWidget(Widget):
                              size_hint=(None, None),
                              font_size=font_size,
                              markup=True)
-        cost_label.pos = (summary_padding,0)
+        cost_label.pos = (summary_padding, summary_size[1] - summary_padding - 2* label_size[1])
         cost_label.bind(texture_size=cost_label.setter('size'))
 
         
-        text='[b]Profit: [color=#00C000]'+str(self.agent_data.profit) + '[/color][/b]'
+        text='[b]Profit: [color=#00C000]'+str(self.agent_data.total_profit) + '[/color][/b]'
         profit_label = Label(text=text, 
                              color=text_color,
-                             halign='right',
-                             valign='center',
+                             size=label_size, 
+                             halign='left',
+                            #  valign='center',
                              size_hint=(None, None),
                              font_size=font_size,
                              markup=True)
         profit_label.size = (profit_label.size[0], summary_size[1])
         profit_label.text_size = profit_label.size
-        profit_label.pos = (summary_size[0] - profit_label.size[0]-summary_padding, 0)
+        # profit_label.pos = (summary_size[0] - profit_label.size[0]-summary_padding, 0)
+        profit_label.pos = (summary_padding, summary_padding)
 
+        text='[b]Transport cost: [color=#700000]'+str(self.agent_data.total_transport_cost) + '[/color][/b]'
+        transport_cost_label = Label(text=text, 
+                             color=text_color,
+                             size=label_size, 
+                             halign='right',
+                            #  valign='center',
+                             size_hint=(None, None),
+                             font_size=font_size,
+                             markup=True)
+        transport_cost_label.bind(texture_size=transport_cost_label.setter('size'))
+        transport_cost_label.size = (transport_cost_label.size[0] + 100, label_size[1])
+        transport_cost_label.text_size = transport_cost_label.size
+        transport_cost_label.pos = (summary_size[0] - transport_cost_label.size[0] - summary_padding, 
+                                    summary_size[1] / 2 + 5)
+
+        text='[b]Products cost: [color=#700000]'+str(self.agent_data.total_products_cost) + '[/color][/b]'
+        products_cost_label = Label(text=text, 
+                             color=text_color,
+                             size=label_size, 
+                             halign='right',
+                            #  valign='center',
+                             size_hint=(None, None),
+                             font_size=font_size,
+                             markup=True)
+        products_cost_label.bind(texture_size=products_cost_label.setter('size'))
+        products_cost_label.size = (products_cost_label.size[0] + 100, label_size[1])
+        products_cost_label.text_size = products_cost_label.size
+        products_cost_label.pos = (summary_size[0] - products_cost_label.size[0] - summary_padding, 
+                                   summary_size[1] / 2 - products_cost_label.size[1]+ 5)
 
         layout = RelativeLayout(pos=summary_pos)
         layout.add_widget(cost_label)
         layout.add_widget(income_label)
         layout.add_widget(profit_label)
+        layout.add_widget(transport_cost_label)
+        layout.add_widget(products_cost_label)
 
         self.add_widget(layout)
 
@@ -174,15 +218,36 @@ class AgentWidget(Widget):
 
 
 class AgentManager(Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, datas, **kwargs):
         super().__init__(**kwargs)
+        self.datas = datas
+        self.data_id = 0
+
+        self.agent_widget = AgentWidget(agent_data=self.datas[self.data_id], pos=(0,0))
+        self.add_widget(self.agent_widget)
+
+        self.next_data_button = Button(text="Next network",
+                                          size=(120, 40),
+                                          pos=(160, 10),
+                                          size_hint=(None, None))
+        self.next_data_button.bind(on_press=self.next_data_callback)
+        self.add_widget(self.next_data_button)
+
+    def next_data_callback(self, event):
+        self.data_id += 1
+        if self.data_id >= len(self.datas):
+            self.data_id = 0
+
+        self.remove_widget(self.agent_widget)
+        self.agent_widget = AgentWidget(agent_data=self.datas[self.data_id], pos=(0,0))
+        self.add_widget(self.agent_widget)
 
         
 class TestAgentWidget(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        data = AgentData()
-        self.add_widget(AgentWidget(agent_data=data))
+        datas = [AgentData(),AgentData()]
+        self.add_widget(AgentManager(datas=datas))
 
 
