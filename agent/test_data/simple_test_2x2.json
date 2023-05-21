@@ -1,0 +1,23 @@
+{
+  "input": {
+    "sellers": {
+      "capacities": [10, 10],
+      "prices":     [1,   1]
+    },
+    "buyers": {
+      "capacities": [10, 10],
+      "prices":     [1,   1]
+    },
+    "routes costs": [[1, 2],
+                     [3, 4]]
+  },
+  "output": {
+    "total cost": 50,
+    "total income": 50,
+    "total profit": 0,
+    "profit table": [[0, 0],
+                     [0,0]],
+    "optimal transport table": [[0, 10],
+                                [10, 0]]
+  }
+}
