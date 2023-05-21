@@ -38,12 +38,17 @@ class Agent:
         total_income = 0
         for row_idx, (transport_table_row, routes_table_row) in enumerate(zip(transport_table, routes_table)):
             for col_idx, (transported_amount, route) in enumerate(zip(transport_table_row, routes_table_row)):
-                route: Route
                 transported_amount: int
 
-                products_cost = route.seller.price * transported_amount
-                transport_cost = route.transport_cost * transported_amount
-                income = route.buyer.price * transported_amount
+                if isinstance(route, FictionalRoute):
+                    products_cost = 0
+                    transport_cost = 0
+                    income = 0
+                else:
+                    route: Route
+                    products_cost = route.seller.price * transported_amount
+                    transport_cost = route.transport_cost * transported_amount
+                    income = route.buyer.price * transported_amount
 
                 total_products_cost += products_cost
                 total_transport_cost += transport_cost
