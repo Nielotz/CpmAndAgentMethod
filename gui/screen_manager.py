@@ -19,6 +19,18 @@ from cpm.network.network import Network
 from cpm.node import Node
 from cpm.solver import Solver
 
+class LabeledTextInput(BoxLayout):
+    def __init__(self, label_text='', input_type='text', multiline=False, **kwargs):
+        super(LabeledTextInput, self).__init__(**kwargs)
+
+        self.orientation = 'horizontal'
+        self.spacing = 10
+
+        self.label = Label(text=label_text)
+        self.text_input = TextInput(input_type=input_type, multiline=multiline)
+
+        self.add_widget(self.label)
+        self.add_widget(self.text_input)
 
 class MyScreenManager(ScreenManager):
     def __init__(self, **kwargs):
@@ -413,10 +425,13 @@ class AgentManualInput(Screen):
         super().__init__(**kwargs)
 
         # create instance variables for supply and demand
-        self.supply = 0
-        self.demand = 0
         self.suppliers = 0
         self.receivers = 0
+        self.supply = []
+        self.demand = []
+        self.sell = []
+        self.buy = []
+        self.transport_table = [[]]
 
         # create button for backing to previous screen
         back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
@@ -428,12 +443,17 @@ class AgentManualInput(Screen):
         supplier_receiver_button = Button(text='add Supplier/Receiver')
         supplier_receiver_button.bind(on_press=self.add_supplier_receiver)
 
-        costs_table_button = Button(text='Costs table')
+        buy_sell_button = Button(text='set Sell/Buy costs')
+        buy_sell_button.bind(on_press=self.add_buy_sell_costs)
 
-        bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        bl.add_widget(demand_supply_button)
+        transport_costs_table_button = Button(text='Transportation costs table')
+        transport_costs_table_button.bind(on_press=self.add_trans_costs)
+
+        bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5}, height=300)
         bl.add_widget(supplier_receiver_button)
-        bl.add_widget(costs_table_button)
+        bl.add_widget(demand_supply_button)
+        bl.add_widget(buy_sell_button)
+        bl.add_widget(transport_costs_table_button)
 
         self.add_widget(back_arrow)
         self.add_widget(bl)
@@ -441,53 +461,137 @@ class AgentManualInput(Screen):
     def go_back_arrow(self, instance):
         self.manager.current = 'agentHome'
     def add_supply_demand(self, instance):
-        # create a popup window
-        content = BoxLayout(orientation='vertical', spacing=10, padding=10,size_hint=(None, None), size=(300, 200))
-        input_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint=(None, None), size=(300, 50))
+        if self.suppliers != 0 and self.receivers != 0:
+            content = BoxLayout(
+                orientation='vertical',
+                spacing=10,
+                padding=10,
+                size_hint=(None, None),
+                size=(500, 300)
+            )
 
-        # create input fields
-        supply_label = Label(text='Supply:', size_hint=(0.3, None), height=30,pos_hint={'top': 1})
-        demand_label = Label(text='Demand:', size_hint=(0.3, None), height=30,pos_hint={'top': 1})
-        supply_input = TextInput(input_type='number', size_hint=(0.5, None), height=30, multiline=False,pos_hint={'top': 1})
-        demand_input = TextInput(input_type='number', size_hint=(0.5, None), height=30, multiline=False,pos_hint={'top': 1})
+            input_layout = BoxLayout(
+                orientation='horizontal',
+                spacing=10,
+                size_hint=(None, None),
+                size=(400, 300),
+                pos_hint={'left':1}
+            )
 
-        # pre-populate the input fields with the previous supply and demand values
-        supply_input.text = str(self.supply)
-        demand_input.text = str(self.demand)
+            supply_layout = GridLayout(
+                cols=1,
+                spacing=10,
+                size_hint=(None, None),
+                width=150,
+                pos_hint={'left': 1}
+            )
+            supply_layout.bind(minimum_height=supply_layout.setter('height'))
 
-        # add the text inputs to the input layout
-        input_layout.add_widget(supply_label)
-        input_layout.add_widget(supply_input)
-        input_layout.add_widget(demand_label)
-        input_layout.add_widget(demand_input)
+            # create input fields
+            supply_label = Label(text='Supply values:', size_hint=(1, None), height=30)
+            supply_layout.add_widget(supply_label)
 
-        content.add_widget(input_layout)
+            # create text inputs for each supplier
+            supply_inputs = []
+            for i in range(self.suppliers):
+                suppliers_label_text = 'S' + str(i + 1)  # Convert i to a string and concatenate with 'S'
+                supply_input = LabeledTextInput(
+                    label_text=suppliers_label_text,
+                    input_type='number',
+                    size_hint=(1, None),
+                    height=30,
+                    multiline=False
+                )
+                if i < len(self.supply):
+                    supply_input.text_input.text = str(self.supply[i])
+                supply_layout.add_widget(supply_input)
+                supply_inputs.append(supply_input)
 
-        # create a submit button to save the values
-        submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 50))
-        content.add_widget(submit_button)
+            supply_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'left': 1})
+            supply_scroll.add_widget(supply_layout)
+            input_layout.add_widget(supply_scroll)
 
-        # create the popup with the content and open it
-        popup = Popup(title='Set Supply/Demand', content=content, size_hint=(None, None), size=(400, 200), pos_hint={'top': 0.95})
-        submit_button.bind(on_press=lambda x: self.save_supply_demand(popup, supply_input, demand_input))
-        popup.open()
-    def save_supply_demand(self, popup, supply_input, demand_input):
+            demand_layout = GridLayout(
+                cols=1,
+                spacing=10,
+                size_hint=(None, None),
+                width=150,
+                pos_hint={'left': 1}
+            )
+            demand_layout.bind(minimum_height=demand_layout.setter('height'))
+
+            # create input fields
+            demand_label = Label(text='Demand values:', size_hint=(1, None), height=30)
+            demand_layout.add_widget(demand_label)
+
+            # create text inputs for each supplier
+            demand_inputs = []
+            for i in range(self.receivers):
+                receivers_label_text = 'R' + str(i + 1)  # Convert i to a string and concatenate with 'S'
+                demand_input = LabeledTextInput(
+                    label_text=receivers_label_text,
+                    input_type='number',
+                    size_hint=(1, None),
+                    height=30,
+                    multiline=False
+                )
+                if i < len(self.demand):
+                    demand_input.text_input.text = str(self.demand[i])
+                demand_layout.add_widget(demand_input)
+                demand_inputs.append(demand_input)
+
+            demand_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'left': 1})
+            demand_scroll.add_widget(demand_layout)
+            input_layout.add_widget(demand_scroll)
+
+            content.add_widget(input_layout)
+
+            # create a submit button to save the values
+            submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 50))
+            content.add_widget(submit_button)
+
+            # create the popup with the content and open it
+            popup = Popup(
+                title='Set Supply/Demand',
+                content=content,
+                size_hint=(None, None),
+                size=(450, 300),
+                pos_hint={'top': 0.95}
+            )
+            submit_button.bind(on_press=lambda x: self.save_supply_demand(popup, supply_inputs, demand_inputs))
+            popup.open()
+        else:
+            popup = Popup(
+                title='Error',
+                content=Label(text='Set suppliers and receivers first'),
+                size_hint=(None, None),
+                size=(500, 300)
+            )
+            popup.open()
+    def save_supply_demand(self, popup, supply_inputs, demand_inputs):
         try:
             # retrieve the values from the text inputs and save them
-            self.supply = int(supply_input.text)
-            self.demand = int(demand_input.text)
+            self.supply = []
+            self.demand = []
+            for input_field in supply_inputs:
+                self.supply.append(int(input_field.text_input.text))
+            for input_field in demand_inputs:
+                self.demand.append(int(input_field.text_input.text))
 
             # close the popup
             popup.dismiss()
 
-            # do something with the supply and demand values
+            # do something with the supply values
             print(f'Supply: {self.supply}, Demand: {self.demand}')
         except Exception as e:
             # display an error message to the user
-            error_popup = Popup(title='ERROR', content=Label(text='inputed value must be an integer'),
-                                size_hint=(0.8, 0.3), auto_dismiss=True)
+            error_popup = Popup(
+                title='ERROR',
+                content=Label(text='Inputted value must be an integer'),
+                size_hint=(0.8, 0.3),
+                auto_dismiss=True
+            )
             error_popup.open()
-
     def add_supplier_receiver(self, instance):
         # create a popup window
         content = BoxLayout(orientation='vertical', spacing=10, padding=10, size_hint=(None, None), size=(300, 200))
@@ -525,7 +629,6 @@ class AgentManualInput(Screen):
         # bind the buttons to actions
         submit_button.bind(on_press=lambda x: self.save_suppliers_receivers(popup, supplier_spinner, receiver_spinner))
         popup.open()
-
     def save_suppliers_receivers(self, popup, supplier_spinner, receiver_spinner):
         # retrieve the values from the text inputs and save them
         self.suppliers = int(supplier_spinner.text)
@@ -536,4 +639,212 @@ class AgentManualInput(Screen):
 
         # do something with the supply and demand values
         print(f'Suppliers: {self.suppliers}, Receivers: {self.receivers}')
+    def add_buy_sell_costs(self, instance):
+        if self.suppliers != 0 and self.receivers != 0:
+            content = BoxLayout(
+                orientation='vertical',
+                spacing=10,
+                padding=10,
+                size_hint=(None, None),
+                size=(500, 300)
+            )
+
+            input_layout = BoxLayout(
+                orientation='horizontal',
+                spacing=10,
+                size_hint=(None, None),
+                size=(400, 300),
+                pos_hint={'left': 1}
+            )
+
+            buy_layout = GridLayout(
+                cols=1,
+                spacing=10,
+                size_hint=(None, None),
+                width=150
+            )
+            buy_layout.bind(minimum_height=buy_layout.setter('height'))
+
+            buy_label = Label(text='Buy costs:', size_hint=(1, None), height=30)
+            buy_layout.add_widget(buy_label)
+
+            # create text inputs for each supplier
+            buy_inputs = []
+            for i in range(self.suppliers):
+                suppliers_label_text = 'S' + str(i + 1)
+                buy_input = LabeledTextInput(
+                    label_text=suppliers_label_text,
+                    input_type='number',
+                    size_hint=(1, None),
+                    height=30,
+                    multiline=False
+                )
+                if i < len(self.buy):
+                    buy_input.text_input.text = str(self.buy[i])
+                buy_layout.add_widget(buy_input)
+                buy_inputs.append(buy_input)
+
+            buy_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'center_x': 0.5})
+            buy_scroll.add_widget(buy_layout)
+            input_layout.add_widget(buy_scroll)
+
+            sell_layout = GridLayout(
+                cols=1,
+                spacing=10,
+                size_hint=(None, None),
+                width=150
+            )
+            sell_layout.bind(minimum_height=sell_layout.setter('height'))
+
+            # create input fields
+            sell_label = Label(text='Sell values:', size_hint=(1, None), height=30)
+            sell_layout.add_widget(sell_label)
+
+            # create text inputs for each receiver
+            sell_inputs = []
+            for i in range(self.receivers):
+                receivers_label_text = 'R' + str(i + 1)  # Convert i to a string and concatenate with 'S'
+                sell_input = LabeledTextInput(
+                    label_text=receivers_label_text,
+                    input_type='number',
+                    size_hint=(1, None),
+                    height=30,
+                    multiline=False
+                )
+                if i < len(self.sell):
+                    sell_input.text_input.text = str(self.sell[i])
+                sell_layout.add_widget(sell_input)
+                sell_inputs.append(sell_input)
+
+            sell_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'center_x': 0.5})
+            sell_scroll.add_widget(sell_layout)
+            input_layout.add_widget(sell_scroll)
+
+            content.add_widget(input_layout)
+
+            # create a submit button to save the values
+            submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 50))
+            content.add_widget(submit_button)
+
+            # create the popup with the content and open it
+            popup = Popup(
+                title='Set Sell/Buy costs',
+                content=content,
+                size_hint=(None, None),
+                size=(450, 300),
+                pos_hint={'top': 0.95}
+            )
+            submit_button.bind(on_press=lambda x: self.save_buy_sell(popup, buy_inputs, sell_inputs))
+            popup.open()
+        else:
+            popup = Popup(
+                title='Error',
+                content=Label(text='Set suppliers and receivers first'),
+                size_hint=(None, None),
+                size=(400, 200)
+            )
+            popup.open()
+    def save_buy_sell(self, popup, buy_inputs, sell_inputs):
+        try:
+            # retrieve the values from the text inputs and save them
+            self.sell = []
+            self.buy = []
+            for input_field in buy_inputs:
+                self.sell.append(int(input_field.text_input.text))
+            for input_field in sell_inputs:
+                self.buy.append(int(input_field.text_input.text))
+
+            # close the popup
+            popup.dismiss()
+
+            # do something with the supply values
+            print(f'Sell costs: {self.buy}, Buy costs: {self.sell}')
+        except Exception as e:
+            # display an error message to the user
+            error_popup = Popup(
+                title='ERROR',
+                content=Label(text='Inputted value must be an integer'),
+                size_hint=(0.8, 0.3),
+                auto_dismiss=True
+            )
+            error_popup.open()
+
+    def add_trans_costs(self, instance):
+        if self.suppliers != 0 and self.receivers != 0:
+            # Create the table layout
+            table_layout = BoxLayout(orientation='vertical', pos_hint={'top': 1, 'left': 1})
+
+            # Add the header row with receiver numbers
+            header_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=30)
+            header_layout.add_widget(Label(text=''))  # Empty label for the top-left cell
+            for receiver in range(1, self.receivers + 1):
+                header_layout.add_widget(Label(text=f'R{receiver}'))
+            table_layout.add_widget(header_layout)
+
+            # Add the rows with supplier numbers and transportation costs
+            self.costs_inputs = []  # Store the TextInput objects in a list
+            for supplier in range(1, self.suppliers + 1):
+                row_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=30)
+                row_layout.add_widget(
+                    Label(text=f'S{supplier}', size_hint=(None, None), width=80, height=30))  # Label for the supplier
+                for receiver in range(1, self.receivers + 1):
+                    # Create a text input field for each transportation cost
+                    costs_input = TextInput()
+                    self.costs_inputs.append(costs_input)  # Add the TextInput object to the list
+
+                    # Prepopulate the text input with value from transport_table if available
+                    if supplier <= len(self.transport_table) and receiver <= len(self.transport_table[supplier - 1]):
+                        costs_input.text = str(self.transport_table[supplier - 1][receiver - 1])
+
+                    row_layout.add_widget(costs_input)
+                table_layout.add_widget(row_layout)
+
+            # Add the submit button
+            submit_button = Button(text='Submit', size_hint=(None, None), size=(100, 40))
+            table_layout.add_widget(submit_button)
+            label = Label()
+            table_layout.add_widget(label)
+            popup = Popup(
+                title='Transportation costs table',
+                content=table_layout,
+                size_hint=(None, None),
+                size=(700, 500)
+            )
+            submit_button.bind(on_press=lambda x: self.save_trans_costs(popup))
+            popup.open()
+        else:
+            popup = Popup(
+                title='Error',
+                content=Label(text='Set suppliers and receivers first'),
+                size_hint=(None, None),
+                size=(400, 200)
+            )
+            popup.open()
+
+    def save_trans_costs(self, popup):
+        try:
+            self.transport_table = [[] for _ in range(self.suppliers)]
+            index = 0
+            for supplier in range(self.suppliers):
+                for receiver in range(self.receivers):
+                    # Get the text input corresponding to the current row and column
+                    text_input = self.costs_inputs[index]
+                    # Append the inputted value to the transport table cell
+                    self.transport_table[supplier].append(int(text_input.text))
+                    index += 1
+            # Close the popup
+            popup.dismiss()
+            print(f'Transport costs: {self.transport_table}')
+        except ValueError:
+            # Display an error message to the user
+            error_popup = Popup(
+                title='ERROR',
+                content=Label(text='Inputted value must be an integer'),
+                size_hint=(0.8, 0.3),
+                auto_dismiss=True
+            )
+            error_popup.open()
+
+
+
 
