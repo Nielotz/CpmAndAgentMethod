@@ -28,12 +28,24 @@ class SupplyChainData:
 class Table:
     table: [[]]
 
-    def print_3x3(self):
-        print(f"""
-        [ {self.table[0][0]} {self.table[0][1]} {self.table[0][2]} ]
-        [ {self.table[1][0]} {self.table[1][1]} {self.table[1][2]} ]
-        [ {self.table[2][0]} {self.table[2][1]} {self.table[2][2]} ]
-        """)
+    def print(self, header: str = "", indent: int=0, next_indent: int=4):
+        print(self.repr(header=header, indent=indent, next_indent=next_indent))
+
+    def repr(self, header: str = "", indent: int=0, next_indent: int=4) -> str:
+        if not self.table:
+            return "[]"
+
+        columns_length = [max([len(str(self.table[row_idx][col_idx])) for row_idx in range(len(self.table))])
+                          for col_idx in range(len(self.table[0]))]
+
+        next_indent_ = " " * next_indent
+        return f"{' ' * indent}{header}" \
+               f"\n{next_indent_}[ " \
+            + f"\n{next_indent_}[ ".join([
+                " | ".join([str(val).rjust(col_len) for (val, col_len) in zip(row, columns_length)])
+                + " ]" for row in self.table
+            ] )
+
 
     def __init__(self, table: [[]] = None):
         self.table = copy.deepcopy(table) or [[]]
@@ -54,15 +66,15 @@ class Table:
     def __getitem__(self, item):
         return self.table[item]
 
-    def __setitem__(self, key, value):
-        self.table[key] = value
+    def __len__(self):
+        return len(self.table)
 
 class RoutesTable(Table):
     table: [[Route, ]]
 
 
 class TransportTable(Table):
-    optimality_indicators_equations: [[]]
+    optimality_indicators_equations: Table
 
     def init_equations(self, routes_table: RoutesTable):
         rows: int = len(routes_table.table)
@@ -77,7 +89,7 @@ class TransportTable(Table):
                 c: float = routes_table[i][j].transport_cost
                 equations[i][j] = (lambda i=i, j=j, c=c: alfa[i] + beta[j] + c)()
 
-        self.optimality_indicators_equations = equations
+        self.optimality_indicators_equations = Table(table=equations)
 
     @classmethod
     def create_using_north_west_method(cls, supply_chain_data: SupplyChainData) -> Self:
@@ -146,25 +158,19 @@ class TransportTable(Table):
 
             Select smallest value in optimality_indicators and shuffle transport table using it.
         """
-        # Make optimality_indicators 2d - table.
-        min_oi_idx: tuple[int, int] = (0, 0)
+        # Get from where to start - idx of min optimality_indicators.
+        start_row_idx: int = 0
+        start_col_idx: int = 0
         min_oi_val: int = min(optimality_indicators)
         optimality_indicators_iter = iter(optimality_indicators)
-        optimality_indicators_table: Table = Table(table=self.table)
-        for row_idx, row in enumerate(optimality_indicators_table):
+        for row_idx, row in enumerate(self.table):
             for col_idx, elem in enumerate(row):
                 if elem == 0:
-                    optimality_indicator = next(optimality_indicators_iter)
-                    optimality_indicators_table[row_idx][col_idx] = optimality_indicator
-                    if optimality_indicator == min_oi_val:
-                        min_oi_idx = (row_idx, col_idx)
-                else:
-                    optimality_indicators_table[row_idx][col_idx] = 0
+                    if next(optimality_indicators_iter) == min_oi_val:
+                        start_row_idx = row_idx
+                        start_col_idx = col_idx
 
         # Find matching route points for field with minimal indicator.
-        start_row_idx = min_oi_idx[0]
-        start_col_idx = min_oi_idx[1]
-
         end_row_idx: int = 0
         end_col_idx: int = 0
         for row_idx, row in enumerate(self.table):
