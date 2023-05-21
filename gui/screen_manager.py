@@ -884,7 +884,8 @@ class AgentManualInput(Screen):
             supply_chain_data = load_data_from_gui(self.supply, self.demand, self.sell, self.buy, self.transport_table, self.fictional)
             supply_chain_data: SupplyChainData
             result = Agent.solve(supply_chain_data=supply_chain_data)
-            #self.manager.current = 'agentOut'
+
+            self.manager.current = 'agentOut'
         # except Exception as e:
         #     # display an error message to the user
         #     error_popup = Popup(
@@ -898,6 +899,7 @@ class AgentOutput(Screen):
     def __init__(self, agentData, **kwargs):
         super().__init__(**kwargs)
         agentOutput = ao.AgentManager(agentData)
+        self.add_widget(agentOutput)
 
 
 
