@@ -33,8 +33,8 @@ class AgentData:
     total_profit: float = 223
     # buyers: [str]  # Headers in tables.
     # sellers: [str]  # Headers in tables.
-    profit_table: list[list[float, ]] = [[1,2,3],[4,5,6]]
-    optimal_transport_table: list[list[float, ]] = [[153,7,8],[9,0,1]]
+    profit_table: list[list[float, ]] = [[1,2,3],[1,2,3],[4,5,6]]
+    optimal_transport_table: list[list[float, ]] = [[153,7,8],[1,2,3],[9,0,1]]
 
 class ColorLabel(Label):
     def __init__(self, bacground_color=(1., 0., 1., 0.25), **kwargs):
@@ -188,8 +188,8 @@ class AgentWidget(Widget):
         self.add_widget(self.generate_table(pos,size,self.agent_data.profit_table))
 
     def generate_table(self, pos, size, data:list[list[int]]):
-        background_color = (.95, .95, .95, 1.)
-        text_color = (.5, .88, .5)
+        background_color = (.9, .9, .9, 1.)
+        text_color = (.25, .65, .25)
         font_size=15
 
         layout = GridLayout(cols=len(data[0])+1, pos=pos, size=size)
@@ -209,7 +209,8 @@ class AgentWidget(Widget):
                                          bacground_color=background_color,
                                          font_size=font_size))
             for j in data[i]:
-                layout.add_widget(ColorLabel(text=str(j), 
+                layout.add_widget(ColorLabel(text="[b]"+str(j)+"[/b]", 
+                                             markup=True, 
                                              color=text_color, 
                                              bacground_color=background_color,
                                              font_size=font_size))
