@@ -5,15 +5,15 @@ from agent.supply_chain import SupplyChainData, RoutesTable, TransportTable, Tab
 
 @dataclass
 class AgentData:
-    # total_products_cost: float
-    # total_transport_cost: float
-    total_cost: float
-    total_income: float
-    total_profit: float
+    # total_products_cost: int
+    # total_transport_cost: int
+    total_cost: int
+    total_income: int
+    total_profit: int
     buyers: [str]  # Headers in tables.
     sellers: [str]  # Headers in tables.
-    profit_table: [[float, ]]
-    optimal_transport_table: [[float, ]]
+    profit_table: [[int, ]]
+    optimal_transport_table: [[int, ]]
 
 
 class Agent:

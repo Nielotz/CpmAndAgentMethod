@@ -8,7 +8,7 @@ import sympy
 @dataclass
 class Trader:
     capacity: int
-    price: float
+    price: int
 
 
 @dataclass
@@ -86,7 +86,8 @@ class TransportTable(Table):
         equations = [[None] * cols for _ in range(rows)]
         for i in range(rows):
             for j in range(cols):
-                c: float = routes_table[i][j].transport_cost
+                route_ij: Route = routes_table.table[i][j]
+                c: int = route_ij.transport_cost + route_ij.seller.price - route_ij.buyer.price
                 equations[i][j] = (lambda i=i, j=j, c=c: alfa[i] + beta[j] + c)()
 
         self.optimality_indicators_equations = Table(table=equations)
