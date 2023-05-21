@@ -438,8 +438,8 @@ class AgentManualInput(Screen):
         self.receivers = 0
         self.supply = []
         self.demand = []
-        self.sell = []
         self.buy = []
+        self.sell = []
         self.transport_table = [[]]
         self.fictional = False
 
@@ -695,8 +695,8 @@ class AgentManualInput(Screen):
 
             # create text inputs for each supplier
             buy_inputs = []
-            for i in range(self.suppliers):
-                suppliers_label_text = 'S' + str(i + 1)
+            for i in range(self.receivers):
+                suppliers_label_text = 'R' + str(i + 1)
                 buy_input = LabeledTextInput(
                     label_text=suppliers_label_text,
                     input_type='number',
@@ -710,8 +710,6 @@ class AgentManualInput(Screen):
                 buy_inputs.append(buy_input)
 
             buy_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'center_x': 0.5})
-            buy_scroll.add_widget(buy_layout)
-            input_layout.add_widget(buy_scroll)
 
             sell_layout = GridLayout(
                 cols=1,
@@ -727,8 +725,8 @@ class AgentManualInput(Screen):
 
             # create text inputs for each receiver
             sell_inputs = []
-            for i in range(self.receivers):
-                receivers_label_text = 'R' + str(i + 1)  # Convert i to a string and concatenate with 'S'
+            for i in range(self.suppliers):
+                receivers_label_text = 'S' + str(i + 1)  # Convert i to a string and concatenate with 'S'
                 sell_input = LabeledTextInput(
                     label_text=receivers_label_text,
                     input_type='number',
@@ -744,6 +742,8 @@ class AgentManualInput(Screen):
             sell_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'center_x': 0.5})
             sell_scroll.add_widget(sell_layout)
             input_layout.add_widget(sell_scroll)
+            buy_scroll.add_widget(buy_layout)
+            input_layout.add_widget(buy_scroll)
 
             content.add_widget(input_layout)
 
@@ -775,9 +775,9 @@ class AgentManualInput(Screen):
             self.sell = []
             self.buy = []
             for input_field in buy_inputs:
-                self.sell.append(int(input_field.text_input.text))
-            for input_field in sell_inputs:
                 self.buy.append(int(input_field.text_input.text))
+            for input_field in sell_inputs:
+                self.sell.append(int(input_field.text_input.text))
 
             # close the popup
             popup.dismiss()
@@ -876,16 +876,18 @@ class AgentManualInput(Screen):
                   f'Receivers: {self.receivers}\n'
                   f'Supply: {self.supply}\n'
                   f'Demand: {self.demand}\n'
-                  f'Sell costs: {self.buy}\n'
-                  f'Buy costs: {self.sell}\n'
+                  f'Buy costs: {self.buy}\n'
+                  f'Sell costs: {self.sell}\n'
                   f'Transport costs: {self.transport_table}\n'
                   f'Fictional: {self.fictional}')
 
             supply_chain_data = load_data_from_gui(self.supply, self.demand, self.sell, self.buy, self.transport_table, self.fictional)
             supply_chain_data: SupplyChainData
             result = Agent.solve(supply_chain_data=supply_chain_data)
-
-            self.manager.current = 'agentOut'
+            agentScreen = AgentOutput(result, name='ao')
+            screen_manager = self.parent
+            screen_manager.add_widget(agentScreen)
+            screen_manager.current = 'ao'
         # except Exception as e:
         #     # display an error message to the user
         #     error_popup = Popup(
@@ -899,7 +901,16 @@ class AgentOutput(Screen):
     def __init__(self, agentData, **kwargs):
         super().__init__(**kwargs)
         agentOutput = ao.AgentManager(agentData)
+
         self.add_widget(agentOutput)
+
+        # create button for backing to previous screen
+        back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
+        back_arrow.bind(on_press=self.go_back_arrow)
+        self.add_widget(back_arrow)
+    def go_back_arrow(self, instance):
+        self.manager.current='ami'
+        self.manager.remove_widget(self)
 
 
 
