@@ -12,6 +12,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, NoTransition, Screen
+from agent.agent import AgentData
 
 # To do
 # -> move labels
@@ -25,16 +26,16 @@ from kivy.uix.screenmanager import ScreenManager, NoTransition, Screen
 #     optimal_transport_table: list[list[int]] = [[153,7,8],[9,0,1]]
 
 
-class AgentData:
-    total_products_cost: float = 5552
-    total_transport_cost: float = 255
-    total_cost: float = 1111
-    total_income: float = 2222
-    total_profit: float = 223
-    # buyers: [str]  # Headers in tables.
-    # sellers: [str]  # Headers in tables.
-    profit_table: list[list[float, ]] = [[1,2,3],[1,2,3],[4,5,6]]
-    optimal_transport_table: list[list[float, ]] = [[153,7,8],[1,2,3],[9,0,1]]
+# class AgentData:
+#     total_products_cost: float = 5552
+#     total_transport_cost: float = 255
+#     total_cost: float = 1111
+#     total_income: float = 2222
+#     total_profit: float = 223
+#     # buyers: [str]  # Headers in tables.
+#     # sellers: [str]  # Headers in tables.
+#     profit_table: list[list[float, ]] = [[1,2,3],[1,2,3],[4,5,6]]
+#     optimal_transport_table: list[list[float, ]] = [[153,7,8],[1,2,3],[9,0,1]]
 
 class ColorLabel(Label):
     def __init__(self, bacground_color=(1., 0., 1., 0.25), **kwargs):
