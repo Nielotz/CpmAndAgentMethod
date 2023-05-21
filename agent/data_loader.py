@@ -44,12 +44,13 @@ def load_data_from_gui(supply: [], demand: [], sell_price: [], buy_price: [], tr
                        force_fictional: bool) -> SupplyChainData:
 
     sellers: [Trader, ] = [Trader(capacity=supply_, price=buy_price_) for supply_, buy_price_ in zip(supply, buy_price)]
-    buyers: [Trader, ] = [Trader(capacity=supply_, price=buy_price_) for supply_, buy_price_ in zip(demand, sell_price)]
+    buyers: [Trader, ] = [Trader(capacity=demand_, price=sell_at_) for demand_, sell_at_ in zip(demand, sell_price)]
 
-    routes: [Route, ] = []
-    sellers_iter = iter(sellers)
-    buyers_iter = iter(buyers)
-    for row in transport_table:
-        routes.append([Route(seller=next(sellers_iter), buyer=next(buyers_iter), transport_cost=cost) for cost in row])
+    routes: [Route, ] = [None] * len(sellers) * len(buyers)
+    for row_idx, row in enumerate(transport_table):
+        for col_idx, cost in enumerate(row):
+            routes[row_idx * len(buyers) + col_idx] = Route(seller=sellers[row_idx],
+                                                            buyer=buyers[col_idx],
+                                                            transport_cost=cost)
 
     return SupplyChainData(sellers=sellers, buyers=buyers, routes=routes, force_fictional=force_fictional)
