@@ -12,6 +12,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.utils import get_color_from_hex
+from kivy.uix.checkbox import CheckBox
 
 import data_input
 import gui.graph as graph
@@ -19,6 +20,7 @@ from cpm.network.network import Network
 from cpm.node import Node
 from cpm.solver import Solver
 
+import gui.agent_out as ao
 class LabeledTextInput(BoxLayout):
     def __init__(self, label_text='', input_type='text', multiline=False, **kwargs):
         super(LabeledTextInput, self).__init__(**kwargs)
@@ -385,7 +387,7 @@ class AgentHomeScreen(Screen):
         # create a filechooser widget
         filechooser = FileChooserListView()
         filechooser.path = os.getcwd()  # set the initial path to the current directory
-        filechooser.filters = ['*.txt']  # only show .txt files
+        filechooser.filters = ['*.json']  # only show .json files
 
         # add the title bar and filechooser widget to a container layout
         container = BoxLayout(orientation='vertical')
@@ -432,6 +434,7 @@ class AgentManualInput(Screen):
         self.sell = []
         self.buy = []
         self.transport_table = [[]]
+        self.fictional = False
 
         # create button for backing to previous screen
         back_arrow = Button(text='<', pos_hint={'left': 1, 'top': 1}, size_hint=(None, None), size=(15, 15))
@@ -449,6 +452,13 @@ class AgentManualInput(Screen):
         transport_costs_table_button = Button(text='Transportation costs table')
         transport_costs_table_button.bind(on_press=self.add_trans_costs)
 
+        save_all_button = Button(text='Save All Data', pos_hint={'right': 1, 'bottom': 1}, size_hint=(None, None), size=(100, 50))
+        save_all_button.bind(on_press=self.save_all_data)
+
+        checkbox = CheckBox(active=self.fictional, color=(1,0,0,1), pos_hint={'x': 0.015, 'bottom': 1}, size_hint=(None, None))
+        checkbox.bind(active=self.on_checkbox_active)
+        checkbox_backgr = Button(text="Toggle Fictional", pos_hint={'left': 1, 'bottom': 1}, size_hint=(None, None), disabled=True,size=(130, 70), color=(1,0,0,1))
+
         bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5}, height=300)
         bl.add_widget(supplier_receiver_button)
         bl.add_widget(demand_supply_button)
@@ -456,8 +466,16 @@ class AgentManualInput(Screen):
         bl.add_widget(transport_costs_table_button)
 
         self.add_widget(back_arrow)
+        self.add_widget(save_all_button)
+        self.add_widget(checkbox_backgr)
+        self.add_widget(checkbox)
         self.add_widget(bl)
-
+    def on_checkbox_active(self, checkbox, value):
+        if value:
+            self.fictional = value
+        else:
+            self.fictional = False
+        print(f'Fictional: {self.fictional}')
     def go_back_arrow(self, instance):
         self.manager.current = 'agentHome'
     def add_supply_demand(self, instance):
@@ -768,7 +786,6 @@ class AgentManualInput(Screen):
                 auto_dismiss=True
             )
             error_popup.open()
-
     def add_trans_costs(self, instance):
         if self.suppliers != 0 and self.receivers != 0:
             # Create the table layout
@@ -820,7 +837,6 @@ class AgentManualInput(Screen):
                 size=(400, 200)
             )
             popup.open()
-
     def save_trans_costs(self, popup):
         try:
             self.transport_table = [[] for _ in range(self.suppliers)]
@@ -844,6 +860,35 @@ class AgentManualInput(Screen):
                 auto_dismiss=True
             )
             error_popup.open()
+    def save_all_data(self, instance):
+        try:
+            if(self.suppliers == 0 or self.receivers ==0 or self.supply == 0 or self.demand ==0 or self.sell ==0 or self.buy==0 or self.transport_table == 0):
+                raise ValueError
+
+            print(f'Suppliers: {self.suppliers}\n'
+                  f'Receivers: {self.receivers}\n'
+                  f'Supply: {self.supply}\n'
+                  f'Demand: {self.demand}\n'
+                  f'Sell costs: {self.buy}\n'
+                  f'Buy costs: {self.sell}\n'
+                  f'Transport costs: {self.transport_table}\n'
+                  f'Fictional: {self.fictional}')
+            #self.manager.current = 'agentOut'
+        except Exception as e:
+            # display an error message to the user
+            error_popup = Popup(
+                title='ERROR',
+                content=Label(text='Something went wrong'),
+                size_hint=(0.8, 0.3),
+                auto_dismiss=True
+            )
+            error_popup.open()
+class AgentOutput(Screen):
+    def __init__(self, agentData, **kwargs):
+        super().__init__(**kwargs)
+        agentOutput = ao.AgentManager(agentData)
+
+
 
 
 
