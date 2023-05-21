@@ -9,15 +9,16 @@
         "prices":     [12, 13]
       },
       "routes costs": [[7, 4],
-                       [3, 5]]
+                       [3, 5]],
+      "force fictional": true
     },
     "output": {
       "total income": 690,
-      "products cost": 355,
-      "transport cost": 195,
+      "total products cost": 355,
+      "total transport cost": 195,
       "total cost": 550,
       "total profit": 140,
-      "profit table": [[-1, 3],
+      "unit profit table": [[-1, 3],
                        [2, 1]],
       "optimal transport table": [[0, 30, 15],
                                   [25, 0, 0],

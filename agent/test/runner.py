@@ -10,14 +10,14 @@ def runner(path: str):
     test_ad: AgentData
     supply_chain_data, test_ad = load_data_from_json_file(path=path)
 
-    result_ad: AgentData = Agent.solve(supply_chain_data=supply_chain_data)
+    results_ad: [AgentData] = Agent.solve(supply_chain_data=supply_chain_data)
+    result_ad = results_ad[0]
 
-    assert test_ad.total_cost == result_ad.total_cost
-    assert test_ad.total_income == result_ad.total_income
-    assert test_ad.total_profit == result_ad.total_profit
+    assert result_ad.total_transport_cost == test_ad.total_transport_cost
+    assert result_ad.total_products_cost == test_ad.total_products_cost
+    assert result_ad.total_income == test_ad.total_income
+    assert result_ad.total_cost == test_ad.total_cost
+    assert result_ad.total_profit == test_ad.total_profit
+    assert result_ad.unit_profit_table == test_ad.unit_profit_table
+    assert result_ad.optimal_transport_table == test_ad.optimal_transport_table
 
-    for t, r in zip(test_ad.profit_table, result_ad.profit_table):
-        assert t == pytest.approx(r)
-
-    for t, r in zip(test_ad.optimal_transport_table, result_ad.optimal_transport_table):
-        assert t == pytest.approx(r)
