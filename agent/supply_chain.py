@@ -61,7 +61,7 @@ class Table:
         self.table = copy.deepcopy(table) or [[]]
 
     def __repr__(self):
-        return self.table
+        return repr(self.table)
 
     @classmethod
     def from_flat(cls, elements: (), dimensions: (int, int)) -> Self:
@@ -109,6 +109,7 @@ class RoutesTable(Table):
                 self.unit_profit_table[row_idx][route_idx] = \
                     route.buyer.price - (route.transport_cost + route.seller.price)
 
+
     def add_row(self, row: []):
         super().add_row(row)
         self.unit_profit_table.add_row([0 for _ in row])
@@ -131,7 +132,10 @@ class TransportTable(Table):
         equations = [[None] * cols for _ in range(rows)]
         for i in range(rows):
             for j in range(cols):
-                c: int = -routes_table.unit_profit_table[i][j]
+                if isinstance(routes_table[i][j], FictionalRoute):
+                    c = 0
+                else:
+                    c: int = -routes_table.unit_profit_table[i][j]
                 equations[i][j] = (lambda i=i, j=j, c=c: alfa[i] + beta[j] + c)()
 
         self.optimality_indicators_equations = Table(table=equations)
