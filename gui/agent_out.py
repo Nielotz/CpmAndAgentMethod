@@ -185,7 +185,7 @@ class AgentWidget(Widget):
         # profit_table_label.pos = (pos[0], pos[1] + size[1] - profit_table_label.size[1]-10)
         
         self.add_widget(layout)
-        self.add_widget(self.generate_table(pos,size,self.agent_data.profit_table))
+        self.add_widget(self.generate_table(pos,size,self.agent_data.unit_profit_table))
 
     def generate_table(self, pos, size, data:list[list[int]]):
         background_color = (.9, .9, .9, 1.)

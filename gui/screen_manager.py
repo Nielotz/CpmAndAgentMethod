@@ -19,6 +19,9 @@ import gui.graph as graph
 from cpm.network.network import Network
 from cpm.node import Node
 from cpm.solver import Solver
+from agent.data_loader import load_data_from_json_file, load_data_from_gui
+from agent.supply_chain import SupplyChainData
+from agent.agent import Agent
 
 import gui.agent_out as ao
 class LabeledTextInput(BoxLayout):
@@ -399,22 +402,26 @@ class AgentHomeScreen(Screen):
 
         # create a callback function to handle the file selection
         def on_selection(instance_, selected_file):
-            try:
+            # try:
                 # check if the file format is supported
-                if not selected_file[0].endswith('.txt'):
+                if not selected_file[0].endswith('.json'):
                     raise Exception('File format not supported')
 
-                # TODO Do something with file
                 print(selected_file[0])
-                todo_popup = Popup(title='TODO', content=Label(text='Not Yet Working'),
-                                    size_hint=(0.8, 0.3), auto_dismiss=True)
-                todo_popup.open()
+                supply_chain_data, _ = load_data_from_json_file(path=selected_file[0])
+                supply_chain_data: SupplyChainData
+
+                result = Agent.solve(supply_chain_data=supply_chain_data)
+                agentScreen = AgentOutput(result, name='ao')
+                screen_manager = self.parent
+                screen_manager.add_widget(agentScreen)
+                screen_manager.current = 'ao'
                 popup.dismiss()
-            except Exception as e:
-                # display an error message to the user
-                error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
-                                    size_hint=(0.8, 0.3), auto_dismiss=True)
-                error_popup.open()
+            # except Exception as e:
+            #     # display an error message to the user
+            #     error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
+            #                         size_hint=(0.8, 0.3), auto_dismiss=True)
+            #     error_popup.open()
 
         # bind the selection callback to the filechooser widget
         filechooser.bind(selection=on_selection)
@@ -861,7 +868,7 @@ class AgentManualInput(Screen):
             )
             error_popup.open()
     def save_all_data(self, instance):
-        try:
+        # try:
             if(self.suppliers == 0 or self.receivers ==0 or self.supply == 0 or self.demand ==0 or self.sell ==0 or self.buy==0 or self.transport_table == 0):
                 raise ValueError
 
@@ -873,16 +880,20 @@ class AgentManualInput(Screen):
                   f'Buy costs: {self.sell}\n'
                   f'Transport costs: {self.transport_table}\n'
                   f'Fictional: {self.fictional}')
+
+            supply_chain_data = load_data_from_gui(self.supply, self.demand, self.sell, self.buy, self.transport_table, self.fictional)
+            supply_chain_data: SupplyChainData
+            result = Agent.solve(supply_chain_data=supply_chain_data)
             #self.manager.current = 'agentOut'
-        except Exception as e:
-            # display an error message to the user
-            error_popup = Popup(
-                title='ERROR',
-                content=Label(text='Something went wrong'),
-                size_hint=(0.8, 0.3),
-                auto_dismiss=True
-            )
-            error_popup.open()
+        # except Exception as e:
+        #     # display an error message to the user
+        #     error_popup = Popup(
+        #         title='ERROR',
+        #         content=Label(text='Something went wrong'),
+        #         size_hint=(0.8, 0.3),
+        #         auto_dismiss=True
+        #     )
+        #     error_popup.open()
 class AgentOutput(Screen):
     def __init__(self, agentData, **kwargs):
         super().__init__(**kwargs)
