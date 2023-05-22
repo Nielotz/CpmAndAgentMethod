@@ -188,23 +188,33 @@ class AgentWidget(Widget):
         self.add_widget(layout)
         self.add_widget(self.generate_table(pos,size,self.agent_data.unit_profit_table))
 
-    def generate_table(self, pos, size, data:list[list[int]]):
+    def generate_table(self, pos, size, data:list[list[int]], fictional=True):
         background_color = (.9, .9, .9, 1.)
         text_color = (.25, .65, .25)
         font_size=15
 
         layout = GridLayout(cols=len(data[0])+1, pos=pos, size=size)
         layout.add_widget(ColorLabel(text=" ", bacground_color=(0,0,0,0), font_size=font_size))
+        tmp=""
 
         for i in range(len(data[0])):
-            layout.add_widget(ColorLabel(text="[b]R"+str(i)+"[/b]",
+            if fictional and i == len(data[0]) - 1:
+                tmp = "F"
+            else:
+                tmp = str(i)
+                
+            layout.add_widget(ColorLabel(text="[b]R"+tmp+"[/b]",
                                          markup=True,
                                          color=text_color, 
                                          bacground_color=background_color,
                                          font_size=font_size))
 
         for i in range(len(data)):
-            layout.add_widget(ColorLabel(text="[b]S"+str(i)+"[/b]",
+            if fictional and i == len(data) - 1:
+                tmp = "F"
+            else:
+                tmp = str(i)
+            layout.add_widget(ColorLabel(text="[b]S"+tmp+"[/b]",
                                          markup=True, 
                                          color=text_color, 
                                          bacground_color=background_color,
@@ -228,9 +238,9 @@ class AgentManager(Widget):
         self.agent_widget = AgentWidget(agent_data=self.datas[self.data_id], pos=(0,0))
         self.add_widget(self.agent_widget)
 
-        self.next_data_button = Button(text="Next network",
-                                          size=(120, 40),
-                                          pos=(160, 10),
+        self.next_data_button = Button(text="Next optimal solution",
+                                          size=(200, 40),
+                                          pos=(20, 10),
                                           size_hint=(None, None))
         self.next_data_button.bind(on_press=self.next_data_callback)
         self.add_widget(self.next_data_button)
