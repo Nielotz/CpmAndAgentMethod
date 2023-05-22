@@ -402,7 +402,7 @@ class AgentHomeScreen(Screen):
 
         # create a callback function to handle the file selection
         def on_selection(instance_, selected_file):
-            # try:
+            try:
                 # check if the file format is supported
                 if not selected_file[0].endswith('.json'):
                     raise Exception('File format not supported')
@@ -417,11 +417,11 @@ class AgentHomeScreen(Screen):
                 screen_manager.add_widget(agentScreen)
                 screen_manager.current = 'ao'
                 popup.dismiss()
-            # except Exception as e:
-            #     # display an error message to the user
-            #     error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
-            #                         size_hint=(0.8, 0.3), auto_dismiss=True)
-            #     error_popup.open()
+            except Exception as e:
+                # display an error message to the user
+                error_popup = Popup(title='File format not supported', content=Label(text=str(selected_file)),
+                                    size_hint=(0.8, 0.3), auto_dismiss=True)
+                error_popup.open()
 
         # bind the selection callback to the filechooser widget
         filechooser.bind(selection=on_selection)
@@ -695,8 +695,8 @@ class AgentManualInput(Screen):
 
             # create text inputs for each supplier
             buy_inputs = []
-            for i in range(self.receivers):
-                suppliers_label_text = 'R' + str(i + 1)
+            for i in range(self.suppliers):
+                suppliers_label_text = 'S' + str(i + 1)
                 buy_input = LabeledTextInput(
                     label_text=suppliers_label_text,
                     input_type='number',
@@ -720,13 +720,13 @@ class AgentManualInput(Screen):
             sell_layout.bind(minimum_height=sell_layout.setter('height'))
 
             # create input fields
-            sell_label = Label(text='Sell values:', size_hint=(1, None), height=30)
+            sell_label = Label(text='Sell costs:', size_hint=(1, None), height=30)
             sell_layout.add_widget(sell_label)
 
             # create text inputs for each receiver
             sell_inputs = []
-            for i in range(self.suppliers):
-                receivers_label_text = 'S' + str(i + 1)  # Convert i to a string and concatenate with 'S'
+            for i in range(self.receivers):
+                receivers_label_text = 'R' + str(i + 1)  # Convert i to a string and concatenate with 'S'
                 sell_input = LabeledTextInput(
                     label_text=receivers_label_text,
                     input_type='number',
@@ -740,10 +740,11 @@ class AgentManualInput(Screen):
                 sell_inputs.append(sell_input)
 
             sell_scroll = ScrollView(size_hint=(1, None), size=(200, 160), pos_hint={'center_x': 0.5})
-            sell_scroll.add_widget(sell_layout)
-            input_layout.add_widget(sell_scroll)
+
             buy_scroll.add_widget(buy_layout)
             input_layout.add_widget(buy_scroll)
+            sell_scroll.add_widget(sell_layout)
+            input_layout.add_widget(sell_scroll)
 
             content.add_widget(input_layout)
 
@@ -783,7 +784,7 @@ class AgentManualInput(Screen):
             popup.dismiss()
 
             # do something with the supply values
-            print(f'Sell costs: {self.buy}, Buy costs: {self.sell}')
+            print(f'Buy costs: {self.buy}, Sell costs: {self.sell}')
         except Exception as e:
             # display an error message to the user
             error_popup = Popup(
@@ -868,7 +869,7 @@ class AgentManualInput(Screen):
             )
             error_popup.open()
     def save_all_data(self, instance):
-        # try:
+        try:
             if(self.suppliers == 0 or self.receivers ==0 or self.supply == 0 or self.demand ==0 or self.sell ==0 or self.buy==0 or self.transport_table == 0):
                 raise ValueError
 
@@ -888,15 +889,15 @@ class AgentManualInput(Screen):
             screen_manager = self.parent
             screen_manager.add_widget(agentScreen)
             screen_manager.current = 'ao'
-        # except Exception as e:
-        #     # display an error message to the user
-        #     error_popup = Popup(
-        #         title='ERROR',
-        #         content=Label(text='Something went wrong'),
-        #         size_hint=(0.8, 0.3),
-        #         auto_dismiss=True
-        #     )
-        #     error_popup.open()
+        except Exception as e:
+            # display an error message to the user
+            error_popup = Popup(
+                title='ERROR',
+                content=Label(text='Something went wrong'),
+                size_hint=(0.8, 0.3),
+                auto_dismiss=True
+            )
+            error_popup.open()
 class AgentOutput(Screen):
     def __init__(self, agentData, **kwargs):
         super().__init__(**kwargs)
