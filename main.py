@@ -8,8 +8,8 @@ from gui.screen_manager import MyScreenManager
 class CpmAndAgentMethodSimulator (App):
     def build(self):
         Window.clearcolor = (218 / 255, 222 / 255, 206 / 255, 1.0)
-        return TestAgentWidget()
-        # return MyScreenManager()
+        #return TestAgentWidget()
+        return MyScreenManager()
 
 
 CpmAndAgentMethodSimulator().run()
