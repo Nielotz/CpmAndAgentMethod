@@ -198,18 +198,23 @@ class TransportTable(Table):
         coefficients: dict[sympy.core.symbol.Symbol: sympy.core.numbers.Integer] \
             = sympy.solve(base_equations, dict=True)
         try:
-            while not coefficients:
+            while not coefficients:  # Cannot solve.
                 var_to_subs = unique_vars_in_base_equations.pop()
                 sub_in_equations(equations=base_equations, what=var_to_subs, to_what=0)
                 sub_in_equations(equations=non_base_equations, what=var_to_subs, to_what=0)
                 coefficients = sympy.solve(base_equations)
-        except IndexError:
+        except IndexError:  # Cannot pop - removed all variables, only numbers left.
             non_base_equations = base_equations
         else:
-            # Calculate non-base equations
+            # Calculate non-base equations.
             for var, value in coefficients[0].items():
                 for eq_idx, eq in enumerate(non_base_equations):
                     non_base_equations[eq_idx] = eq.subs(var, value)
+
+            # Clean up relational.
+            for eq in non_base_equations:
+                for relational_var in eq.free_symbols:
+                    sub_in_equations(non_base_equations, relational_var, 0)
 
         return non_base_equations
 
