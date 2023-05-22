@@ -11,8 +11,8 @@ class AgentData:
     total_cost: int
     total_income: int
     total_profit: int
-    buyers: [str]  # Headers in tables.
-    sellers: [str]  # Headers in tables.
+    buyers: [Trader]  # Headers in tables.
+    sellers: [Trader]  # Headers in tables.
     unit_profit_table: [[int, ]]
     optimal_transport_table: [[int, ]]
 
