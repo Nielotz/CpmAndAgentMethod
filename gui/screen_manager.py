@@ -11,6 +11,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
+from kivy.uix.togglebutton import ToggleButton
 from kivy.utils import get_color_from_hex
 from kivy.uix.checkbox import CheckBox
 
@@ -462,9 +463,10 @@ class AgentManualInput(Screen):
         save_all_button = Button(text='Save All Data', pos_hint={'right': 1, 'bottom': 1}, size_hint=(None, None), size=(100, 50))
         save_all_button.bind(on_press=self.save_all_data)
 
-        checkbox = CheckBox(active=self.fictional, color=(1,0,0,1), pos_hint={'x': 0.015, 'bottom': 1}, size_hint=(None, None))
-        checkbox.bind(active=self.on_checkbox_active)
-        checkbox_backgr = Button(text="Toggle Fictional", pos_hint={'left': 1, 'bottom': 1}, size_hint=(None, None), disabled=True,size=(130, 70), color=(1,0,0,1))
+        # checkbox = CheckBox(active=self.fictional, color=(1,0,0,1), pos_hint={'x': 0.015, 'bottom': 1}, size_hint=(None, None))
+        # checkbox.bind(active=self.on_checkbox_active)
+        checkbox = ToggleButton(text="Force Fictional", pos_hint={'left': 1, 'bottom': 1}, size_hint=(None, None), size=(130, 70))
+        checkbox.bind(on_press=self.on_checkbox_active)
 
         bl = BoxLayout(orientation='vertical', size_hint=(0.25, None), spacing=10, pos_hint={'center_x': 0.5, 'center_y': 0.5}, height=300)
         bl.add_widget(supplier_receiver_button)
@@ -474,14 +476,11 @@ class AgentManualInput(Screen):
 
         self.add_widget(back_arrow)
         self.add_widget(save_all_button)
-        self.add_widget(checkbox_backgr)
+        # self.add_widget(checkbox_backgr)
         self.add_widget(checkbox)
         self.add_widget(bl)
-    def on_checkbox_active(self, checkbox, value):
-        if value:
-            self.fictional = value
-        else:
-            self.fictional = False
+    def on_checkbox_active(self, value):
+        self.fictional = not self.fictional
         print(f'Fictional: {self.fictional}')
     def go_back_arrow(self, instance):
         self.manager.current = 'agentHome'
