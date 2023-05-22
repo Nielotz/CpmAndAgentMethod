@@ -13,6 +13,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, NoTransition, Screen
 from agent.agent import AgentData
+from agent.supply_chain import FictionalTrader
 
 # To do
 # -> move labels
@@ -55,11 +56,17 @@ class AgentWidget(Widget):
     def __init__(self, agent_data: AgentData, **kwargs):
         super().__init__(**kwargs)
         self.agent_data = agent_data
-        
+        if isinstance(self.agent_data.buyers[len(self.agent_data.buyers) - 1], FictionalTrader):
+            self.fictional = True
+        else:
+            self.fictional = False
+
         self.draw_summary()
         self.draw_profit_table()
         self.draw_optimal_transport_table()
        
+
+        
     def draw_summary(self):
         summary_size = (320, 80)
         summary_pos = ((Window.size[0] - summary_size[0]) / 2, Window.size[1] - 2 * summary_size[1]+50)
@@ -188,10 +195,11 @@ class AgentWidget(Widget):
         self.add_widget(layout)
         self.add_widget(self.generate_table(pos,size,self.agent_data.unit_profit_table))
 
-    def generate_table(self, pos, size, data:list[list[int]], fictional=True):
+    def generate_table(self, pos, size, data:list[list[int]]):
         background_color = (.9, .9, .9, 1.)
         text_color = (.25, .65, .25)
         font_size=15
+        fictional=self.fictional
 
         layout = GridLayout(cols=len(data[0])+1, pos=pos, size=size)
         layout.add_widget(ColorLabel(text=" ", bacground_color=(0,0,0,0), font_size=font_size))
